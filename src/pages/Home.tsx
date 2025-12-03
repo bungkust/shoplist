@@ -91,33 +91,49 @@ const Home: React.FC = () => {
                 </IonToolbar>
             </IonHeader>
 
-            <IonContent fullscreen className="ion-padding bg-app-bg">
-                <div className="max-w-md mx-auto pb-20">
+            <IonContent fullscreen className="ion-padding">
+                <div className="max-w-md mx-auto pb-20 pt-4">
+
+                    {/* Welcome Section */}
+                    <div className="mb-6 animate-enter-up">
+                        <h1 className="text-3xl font-bold text-text-main">Hello! 👋</h1>
+                        <p className="text-text-muted">Ready to shop today?</p>
+                    </div>
 
                     {loading ? (
-                        <p className="text-center text-text-muted mt-10">Loading lists...</p>
+                        <div className="space-y-4 mt-4">
+                            {[1, 2, 3].map(i => (
+                                <div key={i} className="h-20 bg-gray-100 rounded-xl animate-pulse"></div>
+                            ))}
+                        </div>
                     ) : lists.length === 0 ? (
-                        <div className="text-center mt-20 opacity-60">
-                            <IonIcon icon={listOutline} className="text-6xl text-gray-300" />
-                            <p className="text-text-muted mt-2">No shopping lists yet.</p>
-                            <p className="text-sm text-gray-400">Tap + to create a new one.</p>
+                        <div className="text-center mt-20 opacity-60 animate-enter-up">
+                            <div className="bg-blue-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <IonIcon icon={listOutline} className="text-5xl text-primary/50" />
+                            </div>
+                            <h3 className="text-lg font-bold text-text-main">No lists yet</h3>
+                            <p className="text-text-muted mt-1">Create your first shopping list now!</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 gap-4 mt-4">
-                            {lists.map(list => (
+                            {lists.map((list, index) => (
                                 <div
                                     key={list.id}
                                     onClick={() => history.push(`/list/${list.id}`)}
-                                    className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 active:scale-95 transition-transform cursor-pointer flex items-center justify-between"
+                                    style={{ animationDelay: `${index * 0.05}s` }}
+                                    className="animate-enter-up bg-white rounded-xl p-4 shadow-soft hover:shadow-medium border border-gray-50 active:scale-[0.98] transition-all duration-200 cursor-pointer flex items-center justify-between group"
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <div className="bg-blue-50 p-2 rounded-lg text-blue-600">
-                                            <IonIcon icon={listOutline} />
+                                    <div className="flex items-center gap-4">
+                                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-3 rounded-2xl text-primary shadow-sm group-hover:scale-110 transition-transform duration-300">
+                                            <IonIcon icon={listOutline} className="text-xl" />
                                         </div>
-                                        <h3 className="font-bold text-text-main text-lg">{list.name}</h3>
+                                        <div className="flex flex-col">
+                                            <h3 className="font-bold text-text-main text-lg leading-tight">{list.name}</h3>
+                                            <span className="text-xs text-text-muted mt-1">Tap to view items</span>
+                                        </div>
                                     </div>
-                                    <IonButton fill="clear" onClick={(e) => openOptions(e, list)} className="m-0 h-8 w-8">
-                                        <IonIcon slot="icon-only" icon={ellipsisVertical} className="text-gray-400" />
+                                    <IonButton fill="clear" onClick={(e) => openOptions(e, list)} className="m-0 h-10 w-10 text-gray-300 hover:text-primary transition-colors">
+                                        <IonIcon slot="icon-only" icon={ellipsisVertical} />
                                     </IonButton>
                                 </div>
                             ))}
@@ -126,9 +142,11 @@ const Home: React.FC = () => {
 
                 </div>
 
-                <IonFab vertical="bottom" horizontal="end" slot="fixed" className="mb-4 mr-4">
-                    <IonFabButton onClick={() => setIsCreateAlertOpen(true)}>
-                        <IonIcon icon={addOutline} />
+                <IonFab vertical="bottom" horizontal="end" slot="fixed" className="mb-6 mr-4">
+                    <IonFabButton onClick={() => setIsCreateAlertOpen(true)} className="shadow-floating hover:scale-110 transition-transform duration-200 overflow-hidden">
+                        <div className="w-full h-full bg-gradient-primary flex items-center justify-center">
+                            <IonIcon icon={addOutline} className="text-white text-2xl" />
+                        </div>
                     </IonFabButton>
                 </IonFab>
 

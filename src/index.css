@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -43,5 +45,24 @@
 
     .voice-modal-centered::part(content) {
         border-radius: 24px;
+    }
+
+    /* Centered Checkout Modal */
+    .checkout-modal-centered {
+        --height: auto;
+        --min-height: 400px;
+        --max-height: 90%;
+        --width: 90%;
+        --max-width: 450px;
+        --border-radius: 24px;
+        --box-shadow: 0 28px 48px rgba(0, 0, 0, 0.2);
+        align-items: center;
+        justify-content: center;
+    }
+
+    .checkout-modal-centered::part(content) {
+        border-radius: 24px;
+        position: relative;
+        overflow: hidden;
     }
 }

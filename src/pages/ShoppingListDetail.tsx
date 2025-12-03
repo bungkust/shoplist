@@ -5,7 +5,7 @@ import { useParams } from 'react-router-dom';
 import { useShoppingList } from '../hooks/useShoppingList';
 import { useVoiceInput } from '../hooks/useVoiceInput';
 import { parseVoiceInput } from '../utils/textParser';
-import ShopCard from '../components/ShopCard';
+import ModernItemCard from '../components/ui/ModernItemCard';
 import VoiceModal from '../components/VoiceModal';
 import CheckoutModal from '../components/CheckoutModal';
 import SmartInputBar from '../components/SmartInputBar';
@@ -28,7 +28,15 @@ const ShoppingListDetail: React.FC = () => {
     const { items, loading, addItem, toggleItem, deleteItem, moveToHistory } = useShoppingList(householdId, listId || null);
 
     const handleToggle = async (id: string, is_purchased: boolean) => {
-        await toggleItem(id, is_purchased);
+        if (is_purchased) {
+            const item = items.find(i => i.id === id);
+            if (item) {
+                setSelectedItem(item);
+                setIsCheckoutOpen(true);
+            }
+        } else {
+            await toggleItem(id, false);
+        }
     };
 
     const handleFabClick = () => {
@@ -137,24 +145,46 @@ const ShoppingListDetail: React.FC = () => {
                 </IonToolbar>
             </IonHeader>
 
-            <IonContent fullscreen className="ion-padding bg-app-bg">
-                <div className="flex flex-col h-full max-w-md mx-auto relative pb-20">
+            <IonContent fullscreen>
+                <div className="flex flex-col h-full max-w-md mx-auto relative px-4 pt-6 pb-24">
+
+                    {/* Summary Header */}
+                    <div className="flex items-center justify-between mb-4 animate-enter-up">
+                        <div>
+                            <h2 className="text-lg font-bold text-text-main">Items</h2>
+                            <p className="text-sm text-text-muted">
+                                {items.filter(i => !i.is_purchased).length} remaining
+                            </p>
+                        </div>
+                        <div className="bg-blue-50 text-primary px-3 py-1 rounded-full text-xs font-bold">
+                            {items.length} Total
+                        </div>
+                    </div>
 
                     {/* Smart Input Bar */}
                     <SmartInputBar onAdd={handleManualAdd} />
 
                     {/* List Items */}
-                    <div className="space-y-1 mt-2">
+                    <div className="space-y-3 mt-4">
                         {loading ? (
-                            <p className="text-center text-text-muted mt-10">Loading...</p>
+                            <div className="space-y-3">
+                                {[1, 2, 3].map(i => (
+                                    <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse"></div>
+                                ))}
+                            </div>
                         ) : items.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center mt-20 space-y-4 opacity-60">
-                                <IonIcon icon={micOutline} className="text-6xl text-gray-300" />
-                                <p className="text-text-muted">No items in this list</p>
+                            <div className="flex flex-col items-center justify-center mt-10 space-y-4 opacity-60 animate-enter-up">
+                                <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center">
+                                    <IonIcon icon={micOutline} className="text-4xl text-gray-300" />
+                                </div>
+                                <div className="text-center">
+                                    <p className="text-text-main font-medium">Your list is empty</p>
+                                    <p className="text-sm text-text-muted">Tap the mic or type to add items</p>
+                                </div>
                             </div>
                         ) : (
                             items.map(item => (
-                                <ShopCard
+                                <ModernItemCard
                                     key={item.id}
                                     item={item}
                                     onToggle={handleToggle}
@@ -171,8 +201,8 @@ const ShoppingListDetail: React.FC = () => {
                 </div>
 
                 {/* FAB */}
-                <IonFab vertical="bottom" horizontal="end" slot="fixed" className="mb-4 mr-4">
-                    <IonFabButton onClick={handleFabClick} className="fab-trigger">
+                <IonFab vertical="bottom" horizontal="end" slot="fixed" className="mb-6 mr-4">
+                    <IonFabButton onClick={handleFabClick} className="shadow-floating hover:scale-110 transition-transform">
                         <IonIcon icon={micOutline} />
                     </IonFabButton>
                 </IonFab>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { IonInput, IonButton, IonIcon } from '@ionic/react';
+import { IonInput, IonIcon } from '@ionic/react';
 import { sendOutline } from 'ionicons/icons';
 import { parseVoiceInput } from '../utils/textParser';
 
@@ -30,30 +30,34 @@ const SmartInputBar: React.FC<SmartInputBarProps> = ({ onAdd }) => {
     };
 
     return (
-        <div className="sticky top-0 z-10 bg-app-bg pt-2 pb-2">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 flex items-center gap-2">
-                <div className="flex-1">
+        <div className="sticky top-0 z-20 pt-2 pb-4 px-1">
+            <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-floating border border-white/50 p-2 flex items-center gap-2 transition-all duration-300 focus-within:shadow-glow focus-within:border-blue-100 focus-within:bg-white">
+                <div className="flex-1 pl-2">
                     <IonInput
                         value={text}
-                        placeholder="Type item (e.g. Bread 2 pcs)"
+                        placeholder="Add item (e.g. 'Milk 2 liters')"
                         onIonChange={e => setText(e.detail.value!)}
                         onKeyDown={e => {
                             if (e.key === 'Enter') {
                                 handleSubmit();
                             }
                         }}
-                        className="text-sm"
+                        className="text-base font-medium text-text-main placeholder:text-gray-400"
+                        style={{ '--padding-start': '0' }}
                     />
                 </div>
-                <IonButton
-                    fill="clear"
-                    size="small"
+                <button
                     onClick={handleSubmit}
                     disabled={!text.trim()}
-                    className="m-0 h-8"
+                    className={`
+                        h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-300
+                        ${text.trim()
+                            ? 'bg-gradient-primary text-white shadow-lg scale-100 rotate-0'
+                            : 'bg-gray-100 text-gray-300 scale-95 rotate-12'}
+                    `}
                 >
-                    <IonIcon slot="icon-only" icon={sendOutline} />
-                </IonButton>
+                    <IonIcon icon={sendOutline} className="text-xl" />
+                </button>
             </div>
         </div>
     );

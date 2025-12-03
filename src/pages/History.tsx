@@ -88,7 +88,7 @@ const History: React.FC = () => {
           <IonTitle>History</IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonContent fullscreen className="ion-padding bg-app-bg">
+      <IonContent fullscreen className="ion-padding">
         <div className="max-w-md mx-auto pb-20">
           {loading ? (
             <p className="text-center text-text-muted mt-10">Loading history...</p>
@@ -99,18 +99,38 @@ const History: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-3 mt-4">
-              {history.map(item => (
-                <div key={item.id} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex justify-between items-center">
-                  <div>
-                    <h3 className="font-bold text-text-main">{item.item_name}</h3>
-                    <p className="text-sm text-text-muted">
-                      {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(item.final_price)} / {item.total_size} {item.base_unit}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {new Date(item.purchased_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </p>
+              {history.map((item, index) => (
+                <div
+                  key={item.id}
+                  style={{ animationDelay: `${index * 0.05}s` }}
+                  className="animate-enter-up bg-white rounded-xl p-4 shadow-soft border border-gray-50 flex justify-between items-center group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="bg-gray-50 p-3 rounded-2xl text-gray-400 group-hover:bg-blue-50 group-hover:text-primary transition-colors duration-300">
+                      <IonIcon icon={timeOutline} className="text-xl" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-text-main text-lg leading-tight">{item.item_name}</h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-sm font-medium text-primary">
+                          {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(item.final_price)}
+                        </span>
+                        <span className="text-xs text-gray-300">•</span>
+                        <span className="text-xs text-text-muted">
+                          {item.total_size} {item.base_unit}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-gray-400 mt-0.5">
+                        {new Date(item.purchased_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </p>
+                    </div>
                   </div>
-                  <IonButton fill="outline" size="small" className="rounded-lg" onClick={() => handleRestock(item)}>
+                  <IonButton
+                    fill="clear"
+                    size="small"
+                    className="h-10 w-10 rounded-full hover:bg-blue-50 text-primary transition-colors"
+                    onClick={() => handleRestock(item)}
+                  >
                     <IonIcon slot="icon-only" icon={refreshOutline} />
                   </IonButton>
                 </div>

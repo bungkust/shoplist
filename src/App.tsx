@@ -1,7 +1,7 @@
 import { Redirect, Route } from 'react-router-dom';
 import { IonApp, IonRouterOutlet, setupIonicReact, IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
-import { listOutline, timeOutline, calculatorOutline } from 'ionicons/icons';
+
 import { useState, useEffect } from 'react';
 import { supabase } from './services/supabaseClient';
 import Home from './pages/Home';
@@ -10,6 +10,8 @@ import Register from './pages/Register';
 import History from './pages/History';
 import Compare from './pages/Compare';
 import ShoppingListDetail from './pages/ShoppingListDetail';
+import Settings from './pages/Settings';
+import { listOutline, timeOutline, calculatorOutline, settingsOutline } from 'ionicons/icons';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -95,6 +97,9 @@ const App: React.FC = () => {
             <Route exact path="/compare">
               <Compare />
             </Route>
+            <Route exact path="/settings">
+              <Settings />
+            </Route>
             <Route exact path="/">
               <Redirect to="/home" />
             </Route>
@@ -112,6 +117,10 @@ const App: React.FC = () => {
             <IonTabButton tab="history" href="/history">
               <IonIcon icon={timeOutline} />
               <IonLabel>History</IonLabel>
+            </IonTabButton>
+            <IonTabButton tab="settings" href="/settings">
+              <IonIcon icon={settingsOutline} />
+              <IonLabel>Settings</IonLabel>
             </IonTabButton>
           </IonTabBar>
         </IonTabs>
