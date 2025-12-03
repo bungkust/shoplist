@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Component Class */
+@layer components {
+    .shop-card {
+        @apply bg-white rounded-2xl p-4 shadow-soft flex items-center justify-between gap-3 transition-all active:scale-[0.98];
+    }
+
+    .text-done {
+        @apply text-gray-400 line-through decoration-2;
+    }
+
+    .fab-trigger {
+        @apply w-14 h-14 rounded-full shadow-float bg-primary text-white flex items-center justify-center text-2xl active:scale-90 transition-transform;
+    }
+
+    /* Native Optimization: Touch Targets */
+    button,
+    [role="button"],
+    ion-button {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* Native Optimization: Inputs */
+    .custom-input input {
+        min-height: 48px !important;
+        /* Android Standard */
+    }
+
+    /* Centered Voice Modal */
+    .voice-modal-centered {
+        --height: 350px;
+        --width: 90%;
+        --max-width: 400px;
+        --border-radius: 24px;
+        --box-shadow: 0 28px 48px rgba(0, 0, 0, 0.4);
+        align-items: center;
+        justify-content: center;
+    }
+
+    .voice-modal-centered::part(content) {
+        border-radius: 24px;
+    }
+}
