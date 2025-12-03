@@ -1,73 +1,82 @@
-# React + TypeScript + Vite
+# Shoplist 🛒
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A smart, voice-enabled shopping list application designed to make your grocery runs efficient and organized. Built with React, TypeScript, and Supabase.
 
-Currently, two official plugins are available:
+## ✨ Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **🎙️ Smart Voice Input**: Add items effortlessly using voice commands. The app intelligently parses quantity and units (e.g., saying "Dua kilo beras" automatically adds 2 kg of Rice). Supports both Indonesian 🇮🇩 and English 🇺🇸.
+- **📝 Multiple Lists**: Create and manage separate shopping lists for different occasions or stores.
+- **☁️ Real-time Sync**: Your lists are synced across all your devices instantly using Supabase.
+- **📊 History Tracking**: Keep track of your past purchases and spending.
+- **⚖️ Price Comparison**: Compare item prices to ensure you get the best deal.
+- **📱 Mobile First**: Optimized for mobile devices with a responsive design and Capacitor integration for native app capabilities.
 
-## React Compiler
+## 🛠️ Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Frontend**: [React](https://react.dev/) + [Vite](https://vitejs.dev/)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) + [Ionic Framework](https://ionicframework.com/) (for components/icons)
+- **State Management**: [Zustand](https://github.com/pmndrs/zustand)
+- **Backend & Auth**: [Supabase](https://supabase.com/)
+- **Mobile Runtime**: [Capacitor](https://capacitorjs.com/)
 
-## Expanding the ESLint configuration
+## 🚀 Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Prerequisites
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- Node.js (v18 or higher)
+- npm or yarn
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Installation
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/bungkust/shoplist.git
+   cd shoplist
+   ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+3. **Environment Setup**
+   Create a `.env` file in the root directory and add your Supabase credentials:
+   ```env
+   VITE_SUPABASE_URL=your_supabase_project_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+4. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+## 📱 Building for Mobile
+
+This project uses Capacitor to build for iOS and Android.
+
+1. **Build the web assets**
+   ```bash
+   npm run build
+   ```
+
+2. **Sync with Capacitor**
+   ```bash
+   npx cap sync
+   ```
+
+3. **Open in Android Studio or Xcode**
+   ```bash
+   npx cap open android
+   # or
+   npx cap open ios
+   ```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is licensed under the MIT License.
