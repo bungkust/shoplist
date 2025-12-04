@@ -11,7 +11,10 @@ import History from './pages/History';
 import Compare from './pages/Compare';
 import ShoppingListDetail from './pages/ShoppingListDetail';
 import Settings from './pages/Settings';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsConditions from './pages/TermsConditions';
 import { listOutline, timeOutline, calculatorOutline, settingsOutline } from 'ionicons/icons';
+import { StatusBar, Style } from '@capacitor/status-bar';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -49,6 +52,17 @@ const App: React.FC = () => {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
+
+    // Native Status Bar & App State
+    const initNative = async () => {
+      try {
+        await StatusBar.setStyle({ style: Style.Light });
+        await StatusBar.setBackgroundColor({ color: '#ffffff' });
+      } catch (e) {
+        console.log('Status bar not available');
+      }
+    };
+    initNative();
 
     return () => subscription.unsubscribe();
   }, []);
@@ -100,7 +114,16 @@ const App: React.FC = () => {
             <Route exact path="/settings">
               <Settings />
             </Route>
+            <Route exact path="/privacy">
+              <PrivacyPolicy />
+            </Route>
+            <Route exact path="/terms">
+              <TermsConditions />
+            </Route>
             <Route exact path="/">
+              <Redirect to="/home" />
+            </Route>
+            <Route exact path="/login">
               <Redirect to="/home" />
             </Route>
           </IonRouterOutlet>

@@ -18,6 +18,10 @@ const Login: React.FC = () => {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         setLoading(false);
 
+        if (!error) {
+            history.push('/home');
+        }
+
         if (error) {
             setToastMessage(error.message);
             setShowToast(true);

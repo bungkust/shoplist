@@ -1,58 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
-
-// Web Speech API Types
-interface SpeechRecognitionEvent extends Event {
-    resultIndex: number;
-    results: SpeechRecognitionResultList;
-}
-
-interface SpeechRecognitionResultList {
-    length: number;
-    item(index: number): SpeechRecognitionResult;
-    [index: number]: SpeechRecognitionResult;
-}
-
-interface SpeechRecognitionResult {
-    length: number;
-    item(index: number): SpeechRecognitionAlternative;
-    [index: number]: SpeechRecognitionAlternative;
-    isFinal: boolean;
-}
-
-interface SpeechRecognitionAlternative {
-    transcript: string;
-    confidence: number;
-}
-
-interface SpeechRecognitionErrorEvent extends Event {
-    error: string;
-    message: string;
-}
-
-interface SpeechRecognition extends EventTarget {
-    continuous: boolean;
-    interimResults: boolean;
-    lang: string;
-    start(): void;
-    stop(): void;
-    abort(): void;
-    onstart: ((this: SpeechRecognition, ev: Event) => any) | null;
-    onend: ((this: SpeechRecognition, ev: Event) => any) | null;
-    onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => any) | null;
-    onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
-}
-
-interface SpeechRecognitionConstructor {
-    new(): SpeechRecognition;
-    prototype: SpeechRecognition;
-}
-
-declare global {
-    interface Window {
-        SpeechRecognition: SpeechRecognitionConstructor;
-        webkitSpeechRecognition: SpeechRecognitionConstructor;
-    }
-}
+import { useState, useEffect, useRef } from 'react';
+import { SpeechRecognition } from '@capacitor-community/speech-recognition';
+import { Capacitor } from '@capacitor/core';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 interface VoiceInputHook {
     isListening: boolean;
@@ -67,64 +16,134 @@ export const useVoiceInput = (): VoiceInputHook => {
     const [isListening, setIsListening] = useState(false);
     const [transcript, setTranscript] = useState('');
     const [hasSupport, setHasSupport] = useState(true);
-
-    // Use useRef to keep track of the recognition instance
-    const recognitionRef = useRef<SpeechRecognition | null>(null);
+    const isBusy = useRef(false);
 
     useEffect(() => {
-        // Check browser support
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
-            setHasSupport(false);
+        // Check if native plugin is available
+        if (!Capacitor.isNativePlatform()) {
+            // Fallback check for web (though we primarily target native now)
+            if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+                setHasSupport(false);
+            }
             return;
         }
 
-        recognitionRef.current = new SpeechRecognition();
-        recognitionRef.current.continuous = false; // Stop after one sentence
-        recognitionRef.current.interimResults = true; // Show live results
+        // Native: Check availability
+        SpeechRecognition.available().then(result => {
+            setHasSupport(result.available);
+        }).catch(() => setHasSupport(false));
 
-        recognitionRef.current.onstart = () => {
-            setIsListening(true);
-            setTranscript('');
+        // Add listener for partial results
+        SpeechRecognition.addListener('partialResults', (data: { matches: string[] }) => {
+            if (data.matches && data.matches.length > 0) {
+                setTranscript(data.matches[0]);
+            }
+        });
+
+        return () => {
+            SpeechRecognition.removeAllListeners();
         };
-
-        recognitionRef.current.onend = () => {
-            setIsListening(false);
-        };
-
-        recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
-            console.error('Speech recognition error', event.error);
-            setIsListening(false);
-        };
-
-        recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
-            const current = event.resultIndex;
-            const result = event.results[current];
-            const transcriptValue = result[0].transcript;
-            setTranscript(transcriptValue);
-        };
-
     }, []);
 
-    const startListening = (lang: 'id-ID' | 'en-US' = 'id-ID') => {
-        if (isListening) return; // Prevent starting if already listening
+    const startListening = async (lang: 'id-ID' | 'en-US' = 'id-ID') => {
+        if (isListening || isBusy.current) return;
 
-        // Clear previous transcript
+        isBusy.current = true;
         setTranscript('');
 
-        if (recognitionRef.current) {
-            recognitionRef.current.lang = lang;
-            try {
-                recognitionRef.current.start();
-            } catch (e) {
-                console.error("Error starting speech recognition:", e);
+        // Haptic feedback for immediate response
+        await Haptics.impact({ style: ImpactStyle.Medium });
+
+        try {
+            // Native Platform Logic
+            if (Capacitor.isNativePlatform()) {
+                // Check & Request Permissions
+                const status = await SpeechRecognition.checkPermissions();
+
+                if (status.speechRecognition !== 'granted') {
+                    const request = await SpeechRecognition.requestPermissions();
+
+                    if (request.speechRecognition !== 'granted') {
+                        console.error('Speech recognition permission denied');
+                        isBusy.current = false;
+                        return;
+                    }
+                }
+
+                setIsListening(true);
+
+                // Small delay to ensure UI is ready and previous session is fully cleared
+                await new Promise(resolve => setTimeout(resolve, 150));
+
+                try {
+                    const result = await SpeechRecognition.start({
+                        language: lang,
+                        maxResults: 5,
+                        prompt: "Bicara sekarang...", // Localized prompt
+                        partialResults: true,
+                        popup: true // Enable native UI for better UX and silence handling
+                    });
+
+                    // Handle final result
+                    if (result.matches && result.matches.length > 0) {
+                        // Join all matches for debugging purposes in the toast if needed, 
+                        // but for transcript we still take the first one (most confident)
+                        setTranscript(result.matches[0]);
+                    }
+                } catch (startError) {
+                    console.error("Error during recognition session:", startError);
+                } finally {
+                    // Always mark as finished when start() returns (success or error)
+                    setIsListening(false);
+                }
+            } else {
+                // Web Fallback (Legacy)
+                const SpeechRecognitionWeb = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+                if (!SpeechRecognitionWeb) {
+                    isBusy.current = false;
+                    return;
+                }
+
+                const recognition = new SpeechRecognitionWeb();
+                recognition.lang = lang;
+                recognition.interimResults = true;
+                recognition.continuous = false;
+
+                recognition.onstart = () => setIsListening(true);
+                recognition.onend = () => {
+                    setIsListening(false);
+                    isBusy.current = false;
+                };
+                recognition.onresult = (event: any) => {
+                    const result = event.results[event.resultIndex];
+                    setTranscript(result[0].transcript);
+                };
+
+                recognition.start();
+                // For web, isBusy is handled in onend
+                return;
+            }
+        } catch (e) {
+            console.error("Error starting speech recognition:", e);
+            setIsListening(false);
+        } finally {
+            // Only reset busy for native here, web handles it in onend
+            if (Capacitor.isNativePlatform()) {
+                isBusy.current = false;
             }
         }
     };
 
-    const stopListening = () => {
-        if (recognitionRef.current) {
-            recognitionRef.current.stop();
+    const stopListening = async () => {
+        try {
+            if (Capacitor.isNativePlatform()) {
+                await SpeechRecognition.stop();
+            }
+        } catch (e) {
+            console.error("Error stopping speech recognition:", e);
+        } finally {
+            setIsListening(false);
+            isBusy.current = false;
         }
     };
 

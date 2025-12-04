@@ -1,14 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonItem, IonLabel, IonList, IonIcon, IonButton, IonAvatar, IonToast } from '@ionic/react';
-import { personCircleOutline, logOutOutline, copyOutline, settingsOutline, chevronForwardOutline, mailOutline, homeOutline } from 'ionicons/icons';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonButton, IonToast, IonAlert } from '@ionic/react';
+import { personCircleOutline, logOutOutline, copyOutline, mailOutline, homeOutline, chevronDownOutline, createOutline } from 'ionicons/icons';
 import { supabase } from '../services/supabaseClient';
 import { useHistory } from 'react-router-dom';
 
 const Settings: React.FC = () => {
+    interface Member {
+        email: string;
+    }
+
     const [email, setEmail] = useState<string>('');
     const [householdId, setHouseholdId] = useState<string>('');
+    const [members, setMembers] = useState<Member[]>([]);
+    const [language, setLanguage] = useState<'en-US' | 'id-ID'>(
+        (localStorage.getItem('voice_lang') as 'en-US' | 'id-ID') || 'en-US'
+    );
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
+    const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+    const [showEditHouseholdAlert, setShowEditHouseholdAlert] = useState(false);
     const history = useHistory();
 
     useEffect(() => {
@@ -18,18 +28,92 @@ const Settings: React.FC = () => {
                 setEmail(user.email || '');
                 const { data } = await supabase
                     .from('profiles')
-                    .select('household_id')
+                    .select('*') // Select all to see available columns
                     .eq('id', user.id)
                     .single();
-                if (data) setHouseholdId(data.household_id);
+
+                console.log('Current User Profile:', data); // DEBUG
+
+                if (data && data.household_id) {
+                    setHouseholdId(data.household_id);
+                    fetchMembers(data.household_id);
+                }
             }
         };
+
+        const fetchMembers = async (hId: string) => {
+            // Temporary: just fetch IDs to see if it works
+            const { data } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('household_id', hId);
+
+            console.log('Household Members:', data); // DEBUG
+
+            if (data) {
+                // Map to Member interface, handling missing fields gracefully
+                const mappedMembers = data.map((p: any) => ({
+                    email: p.email || p.username || p.full_name || `User ${p.id.substring(0, 4)}`
+                }));
+                setMembers(mappedMembers);
+            }
+        };
+
         getProfile();
     }, []);
 
     const handleSignOut = async () => {
         await supabase.auth.signOut();
         history.push('/login');
+    };
+
+    const handleDeleteAccount = async () => {
+        try {
+            const { error } = await supabase.rpc('delete_user');
+            if (error) throw error;
+
+            await supabase.auth.signOut();
+            history.push('/login');
+            window.location.reload(); // Force reload to clear states
+        } catch (error) {
+            console.error('Error deleting account:', error);
+            setToastMessage('Failed to delete account. Please try again.');
+            setShowToast(true);
+        }
+    };
+
+    const handleUpdateHousehold = async (newId: string) => {
+        if (!newId || newId.trim() === '') {
+            setToastMessage('Please enter a valid Household ID.');
+            setShowToast(true);
+            return;
+        }
+
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('No user found');
+
+            const { error } = await supabase
+                .from('profiles')
+                .update({ household_id: newId.trim() })
+                .eq('id', user.id);
+
+            if (error) throw error;
+
+            setHouseholdId(newId.trim());
+            setToastMessage('Successfully joined new household!');
+            setShowToast(true);
+
+            // Reload to sync data
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+
+        } catch (error: any) {
+            console.error('Error updating household:', error);
+            setToastMessage(error.message || 'Failed to update household.');
+            setShowToast(true);
+        }
     };
 
     const copyToClipboard = (text: string) => {
@@ -78,6 +162,16 @@ const Settings: React.FC = () => {
                                         <span className="font-mono text-sm font-bold text-text-main truncate pr-2">{householdId || 'Loading...'}</span>
                                     </div>
                                 </div>
+                            </div>
+                            <div className="flex gap-1">
+                                <IonButton
+                                    fill="clear"
+                                    size="small"
+                                    onClick={() => setShowEditHouseholdAlert(true)}
+                                    className="bg-gray-50 rounded-xl m-0 h-10 w-10 text-gray-500 hover:text-primary"
+                                >
+                                    <IonIcon slot="icon-only" icon={createOutline} />
+                                </IonButton>
                                 <IonButton
                                     fill="clear"
                                     size="small"
@@ -87,13 +181,58 @@ const Settings: React.FC = () => {
                                     <IonIcon slot="icon-only" icon={copyOutline} />
                                 </IonButton>
                             </div>
-                            <div className="px-4 pb-4">
-                                <p className="text-xs text-gray-400 bg-gray-50 p-3 rounded-xl leading-relaxed">
-                                    Share this ID with family members to sync your shopping lists together.
-                                </p>
-                            </div>
                         </div>
                     </div>
+
+                    <div className="px-4 pb-4">
+                        <p className="text-xs text-gray-400 bg-gray-50 p-3 rounded-xl leading-relaxed">
+                            Share this ID with family members to sync your shopping lists together. Or enter their ID to join them.
+                        </p>
+                    </div>
+
+                    {/* Household Members List */}
+                    {members.length > 0 && (
+                        <div className="px-4 pb-2">
+                            <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Members</h4>
+                            <div className="flex flex-wrap gap-2">
+                                {members.map((member, idx) => (
+                                    <div key={idx} className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+                                        <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold text-primary">
+                                            {member.email.charAt(0).toUpperCase()}
+                                        </div>
+                                        <span className="text-xs text-text-main font-medium">{member.email.split('@')[0]}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+
+                    <IonAlert
+                        isOpen={showEditHouseholdAlert}
+                        onDidDismiss={() => setShowEditHouseholdAlert(false)}
+                        header="Join Household"
+                        subHeader="Enter a Family Member's ID"
+                        message="Warning: Joining a new household will replace your current lists with the new household's lists."
+                        inputs={[
+                            {
+                                name: 'newHouseholdId',
+                                type: 'text',
+                                placeholder: 'Paste Household ID here'
+                            }
+                        ]}
+                        buttons={[
+                            {
+                                text: 'Cancel',
+                                role: 'cancel',
+                                cssClass: 'secondary',
+                            },
+                            {
+                                text: 'Join',
+                                handler: (data) => handleUpdateHousehold(data.newHouseholdId)
+                            }
+                        ]}
+                    />
 
                     {/* App Settings */}
                     <div className="space-y-2 animate-enter-up" style={{ animationDelay: '0.2s' }}>
@@ -103,10 +242,60 @@ const Settings: React.FC = () => {
                                 <span className="text-text-main font-medium">Version</span>
                                 <span className="text-text-muted text-sm">v1.0.0 (Beta)</span>
                             </div>
-                            <div className="p-4 flex items-center justify-between">
+                            <div className="p-4 flex items-center justify-between border-b border-gray-50">
                                 <span className="text-text-main font-medium">Theme</span>
                                 <span className="text-primary text-sm font-bold">Soft Blue</span>
                             </div>
+
+                            {/* Language Selector */}
+                            <div className="p-4 flex items-center justify-between">
+                                <span className="text-text-main font-medium">Voice Language</span>
+                                <div className="flex bg-gray-100 p-1 rounded-lg">
+                                    <button
+                                        onClick={() => {
+                                            localStorage.setItem('voice_lang', 'en-US');
+                                            setLanguage('en-US');
+                                            setToastMessage('Language set to English');
+                                            setShowToast(true);
+                                        }}
+                                        className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${language === 'en-US' ? 'bg-white text-primary shadow-sm' : 'text-gray-400'}`}
+                                    >
+                                        EN
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            localStorage.setItem('voice_lang', 'id-ID');
+                                            setLanguage('id-ID');
+                                            setToastMessage('Bahasa diatur ke Indonesia');
+                                            setShowToast(true);
+                                        }}
+                                        className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${language === 'id-ID' ? 'bg-white text-primary shadow-sm' : 'text-gray-400'}`}
+                                    >
+                                        ID
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Legal Section */}
+                    <div className="space-y-2 animate-enter-up" style={{ animationDelay: '0.25s' }}>
+                        <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider ml-2">Legal</h3>
+                        <div className="bg-white rounded-2xl overflow-hidden shadow-soft">
+                            <button
+                                onClick={() => history.push('/privacy')}
+                                className="w-full p-4 flex items-center justify-between border-b border-gray-50 hover:bg-gray-50 transition-colors text-left"
+                            >
+                                <span className="text-text-main font-medium">Privacy Policy</span>
+                                <IonIcon icon={chevronDownOutline} className="text-gray-300 -rotate-90" />
+                            </button>
+                            <button
+                                onClick={() => history.push('/terms')}
+                                className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
+                            >
+                                <span className="text-text-main font-medium">Terms & Conditions</span>
+                                <IonIcon icon={chevronDownOutline} className="text-gray-300 -rotate-90" />
+                            </button>
                         </div>
                     </div>
 
@@ -119,12 +308,42 @@ const Settings: React.FC = () => {
                             <IonIcon icon={logOutOutline} />
                             Sign Out
                         </button>
+
+                        <div className="mt-8 text-center">
+                            <button
+                                onClick={() => setShowDeleteAlert(true)}
+                                className="text-xs text-red-300 hover:text-red-500 underline transition-colors"
+                            >
+                                Delete Account Permanently
+                            </button>
+                        </div>
+
                         <p className="text-center text-xs text-gray-300 mt-4">
                             Made with ❤️ by Shoplist Team
                         </p>
                     </div>
-
                 </div>
+
+                <IonAlert
+                    isOpen={showDeleteAlert}
+                    onDidDismiss={() => setShowDeleteAlert(false)}
+                    header="Delete Account"
+                    subHeader="Warning: This action is irreversible."
+                    message="Are you sure you want to delete your account? All your data including shopping lists and history will be permanently removed."
+                    buttons={[
+                        {
+                            text: 'Cancel',
+                            role: 'cancel',
+                            cssClass: 'secondary',
+                        },
+                        {
+                            text: 'Delete',
+                            role: 'destructive',
+                            cssClass: 'alert-button-delete', // Custom class if needed
+                            handler: handleDeleteAccount
+                        }
+                    ]}
+                />
 
                 <IonToast
                     isOpen={showToast}
@@ -135,8 +354,8 @@ const Settings: React.FC = () => {
                     color="dark"
                     className="mb-16"
                 />
-            </IonContent>
-        </IonPage>
+            </IonContent >
+        </IonPage >
     );
 };
 

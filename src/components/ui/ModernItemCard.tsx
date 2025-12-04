@@ -2,6 +2,7 @@
 import React from 'react';
 import { IonIcon, IonCheckbox } from '@ionic/react';
 import { trashOutline } from 'ionicons/icons';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
 interface ModernItemCardProps {
     item: any; // Using any for now to match flexibility, but ideally should be ShoppingItem
@@ -25,8 +26,9 @@ const ModernItemCard: React.FC<ModernItemCardProps> = ({ item, onToggle, onDelet
             <div className="flex items-center gap-4 flex-1">
                 {/* Checkbox Bulat Modern */}
                 <div
-                    onClick={(e) => {
+                    onClick={async (e) => {
                         e.stopPropagation();
+                        await Haptics.impact({ style: ImpactStyle.Light });
                         onToggle(item.id, !item.is_purchased);
                     }}
                     className="relative cursor-pointer"
@@ -59,8 +61,9 @@ const ModernItemCard: React.FC<ModernItemCardProps> = ({ item, onToggle, onDelet
 
             {/* Bagian Kanan: Tombol Hapus */}
             <button
-                onClick={(e) => {
+                onClick={async (e) => {
                     e.stopPropagation(); // Supaya tidak memicu checkbox
+                    await Haptics.impact({ style: ImpactStyle.Medium });
                     onDelete(item.id);
                 }}
                 // Touch target besar (p-3) tapi ikon kecil, agar mudah ditekan di HP

@@ -1,5 +1,6 @@
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonFab, IonFabButton, IonToast, IonButtons, IonBackButton } from '@ionic/react';
 import { micOutline } from 'ionicons/icons';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useShoppingList } from '../hooks/useShoppingList';
@@ -40,8 +41,9 @@ const ShoppingListDetail: React.FC = () => {
     };
 
     const handleFabClick = () => {
-        setIsModalOpen(true);
-        startListening();
+        // setIsModalOpen(true); // Disable custom modal, using native popup
+        const lang = (localStorage.getItem('voice_lang') as 'en-US' | 'id-ID') || 'en-US';
+        startListening(lang);
     };
 
     const handleModalClose = () => {
@@ -76,24 +78,31 @@ const ShoppingListDetail: React.FC = () => {
 
     // Process transcript when listening stops
     useEffect(() => {
-        if (!isListening && transcript && isModalOpen) {
+        if (!isListening && transcript) {
             if (!householdId) return; // Safety check
 
-            const parsed = parseVoiceInput(transcript, 'en-US');
+            const lang = (localStorage.getItem('voice_lang') as 'en-US' | 'id-ID') || 'en-US';
+            const parsed = parseVoiceInput(transcript, lang);
 
             if (parsed.name) {
+                Haptics.impact({ style: ImpactStyle.Light });
                 addItem({
                     item_name: parsed.name,
                     quantity: parsed.qty,
                     unit: parsed.unit
                 });
-                setToastMessage(`Added: ${parsed.name}`);
+
+                if (!navigator.onLine) {
+                    setToastMessage('Offline. Data saved locally.');
+                } else {
+                    setToastMessage(`Added: ${parsed.name}`);
+                }
                 setShowToast(true);
             }
 
             // Close modal after a short delay
             setTimeout(() => {
-                setIsModalOpen(false);
+                // setIsModalOpen(false);
                 resetTranscript(); // Clear transcript to prevent duplication
             }, 500);
         }
@@ -107,10 +116,17 @@ const ShoppingListDetail: React.FC = () => {
         }
     };
 
-    const handleManualAdd = (item: { item_name: string; quantity: number; unit: string }) => {
+    const handleManualAdd = async (item: { item_name: string; quantity: number; unit: string }) => {
         if (!householdId) return;
+
+        await Haptics.impact({ style: ImpactStyle.Light });
         addItem(item);
-        setToastMessage(`Added: ${item.item_name}`);
+
+        if (!navigator.onLine) {
+            setToastMessage('Offline. Data saved locally.');
+        } else {
+            setToastMessage(`Added: ${item.item_name}`);
+        }
         setShowToast(true);
     };
 
@@ -146,12 +162,12 @@ const ShoppingListDetail: React.FC = () => {
             </IonHeader>
 
             <IonContent fullscreen>
-                <div className="flex flex-col h-full max-w-md mx-auto relative px-4 pt-6 pb-24">
+                <div className="flex flex-col h-full max-w-md mx-auto relative px-4 pt-2 pb-24">
 
                     {/* Summary Header */}
                     <div className="flex items-center justify-between mb-4 animate-enter-up">
                         <div>
-                            <h2 className="text-lg font-bold text-text-main">Items</h2>
+                            <h2 className="text-xl font-bold text-text-main">Items</h2>
                             <p className="text-sm text-text-muted">
                                 {items.filter(i => !i.is_purchased).length} remaining
                             </p>

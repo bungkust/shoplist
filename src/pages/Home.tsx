@@ -91,12 +91,12 @@ const Home: React.FC = () => {
                 </IonToolbar>
             </IonHeader>
 
-            <IonContent fullscreen className="ion-padding">
-                <div className="max-w-md mx-auto pb-20 pt-4">
+            <IonContent fullscreen>
+                <div className="max-w-md mx-auto pb-20 pt-2 px-4">
 
                     {/* Welcome Section */}
                     <div className="mb-6 animate-enter-up">
-                        <h1 className="text-3xl font-bold text-text-main">Hello! 👋</h1>
+                        <h1 className="text-3xl font-bold text-text-main mt-0">Hello!</h1>
                         <p className="text-text-muted">Ready to shop today?</p>
                     </div>
 

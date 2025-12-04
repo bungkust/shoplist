@@ -77,7 +77,7 @@ const Register: React.FC = () => {
                         <div className="w-16 h-16 bg-blue-100 rounded-full mx-auto flex items-center justify-center mb-2">
                             <IonIcon icon={personAddOutline} className="text-3xl text-primary" />
                         </div>
-                        <h2 className="text-2xl font-bold text-text-main">Selamat Datang</h2>
+                        <h1 className="text-3xl font-bold text-text-main">Selamat Datang</h1>
                         <p className="text-text-muted">Daftar untuk mulai mencatat belanjaan.</p>
                     </div>
 
