@@ -1,10 +1,12 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonFab, IonFabButton, IonIcon, IonAlert, IonActionSheet, IonToast, IonButton } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonFab, IonFabButton, IonIcon, IonAlert, IonActionSheet, IonToast, IonButton, useIonViewWillEnter } from '@ionic/react';
 import { addOutline, listOutline, ellipsisVertical, trashOutline, createOutline } from 'ionicons/icons';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useHistory } from 'react-router-dom';
 import { supabase } from '../services/supabaseClient';
 import { useLists } from '../hooks/useLists';
 import type { ListMaster } from '../types/supabase';
+
+import { ENABLE_CLOUD_SYNC } from '../config';
 
 const Home: React.FC = () => {
     // ... (state remains same)
@@ -21,6 +23,11 @@ const Home: React.FC = () => {
 
     useEffect(() => {
         const getProfile = async () => {
+            if (!ENABLE_CLOUD_SYNC) {
+                setHouseholdId('guest_household');
+                return;
+            }
+
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
                 const { data } = await supabase
@@ -34,7 +41,14 @@ const Home: React.FC = () => {
         getProfile();
     }, []);
 
-    const { lists, loading, createList, updateList, deleteList } = useLists(householdId);
+    const { lists, loading, createList, updateList, deleteList, refreshLists } = useLists(householdId);
+
+    const refreshListsRef = useRef(refreshLists);
+    refreshListsRef.current = refreshLists;
+
+    useIonViewWillEnter(() => {
+        refreshListsRef.current();
+    });
 
     const handleCreateList = async (name: string) => {
         if (name.trim()) {

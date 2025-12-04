@@ -1,7 +1,7 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonFab, IonFabButton, IonToast, IonButtons, IonBackButton } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonFab, IonFabButton, IonToast, IonButtons, IonBackButton, useIonViewWillEnter } from '@ionic/react';
 import { micOutline } from 'ionicons/icons';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useShoppingList } from '../hooks/useShoppingList';
 import { useVoiceInput } from '../hooks/useVoiceInput';
@@ -12,6 +12,8 @@ import CheckoutModal from '../components/CheckoutModal';
 import SmartInputBar from '../components/SmartInputBar';
 import { supabase } from '../services/supabaseClient';
 import type { ShoppingItem } from '../types/supabase';
+
+import { ENABLE_CLOUD_SYNC } from '../config';
 
 const ShoppingListDetail: React.FC = () => {
     const { id: listId } = useParams<{ id: string }>();
@@ -26,7 +28,14 @@ const ShoppingListDetail: React.FC = () => {
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<ShoppingItem | null>(null);
 
-    const { items, loading, addItem, toggleItem, deleteItem, moveToHistory } = useShoppingList(householdId, listId || null);
+    const { items, loading, addItem, toggleItem, deleteItem, moveToHistory, refreshItems } = useShoppingList(householdId, listId || null);
+
+    const refreshItemsRef = useRef(refreshItems);
+    refreshItemsRef.current = refreshItems;
+
+    useIonViewWillEnter(() => {
+        refreshItemsRef.current();
+    });
 
     const handleToggle = async (id: string, is_purchased: boolean) => {
         if (is_purchased) {
@@ -54,6 +63,12 @@ const ShoppingListDetail: React.FC = () => {
     // Fetch Household ID and List Name
     useEffect(() => {
         const getProfileAndList = async () => {
+            if (!ENABLE_CLOUD_SYNC) {
+                setHouseholdId('guest_household');
+                // Optional: Fetch list name from local storage if needed
+                return;
+            }
+
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
                 const { data } = await supabase

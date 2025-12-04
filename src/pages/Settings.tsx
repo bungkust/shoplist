@@ -3,6 +3,7 @@ import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonButto
 import { personCircleOutline, logOutOutline, copyOutline, mailOutline, homeOutline, chevronDownOutline, createOutline } from 'ionicons/icons';
 import { supabase } from '../services/supabaseClient';
 import { useHistory } from 'react-router-dom';
+import { ENABLE_CLOUD_SYNC } from '../config';
 
 const Settings: React.FC = () => {
     interface Member {
@@ -22,6 +23,8 @@ const Settings: React.FC = () => {
     const history = useHistory();
 
     useEffect(() => {
+        if (!ENABLE_CLOUD_SYNC) return;
+
         const getProfile = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
@@ -132,6 +135,8 @@ const Settings: React.FC = () => {
             <IonContent fullscreen className="ion-padding">
                 <div className="max-w-md mx-auto pb-20 pt-4 space-y-6">
 
+
+
                     {/* Profile Card */}
                     <div className="bg-white rounded-3xl p-6 shadow-soft animate-enter-up relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-10 -mt-10 blur-2xl"></div>
@@ -140,58 +145,66 @@ const Settings: React.FC = () => {
                             <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-blue-50 rounded-full flex items-center justify-center mb-4 shadow-sm">
                                 <IonIcon icon={personCircleOutline} className="text-6xl text-primary" />
                             </div>
-                            <h2 className="text-xl font-bold text-text-main">{email.split('@')[0]}</h2>
+                            <h2 className="text-xl font-bold text-text-main">
+                                {ENABLE_CLOUD_SYNC ? email.split('@')[0] : 'Guest User'}
+                            </h2>
                             <p className="text-text-muted text-sm flex items-center gap-1 mt-1">
                                 <IonIcon icon={mailOutline} />
-                                {email}
+                                {ENABLE_CLOUD_SYNC ? email : 'Offline Mode'}
                             </p>
+                            {!ENABLE_CLOUD_SYNC && (
+                                <span className="mt-2 px-3 py-1 bg-orange-100 text-orange-600 text-xs font-bold rounded-full">
+                                    Local Storage Only
+                                </span>
+                            )}
                         </div>
                     </div>
 
-                    {/* Household Info */}
-                    <div className="space-y-2 animate-enter-up" style={{ animationDelay: '0.1s' }}>
-                        <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider ml-2">Household</h3>
-                        <div className="bg-white rounded-2xl p-1 shadow-soft">
-                            <div className="flex items-center justify-between p-4">
-                                <div className="flex items-center gap-3 overflow-hidden">
-                                    <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 shrink-0">
-                                        <IonIcon icon={homeOutline} />
-                                    </div>
-                                    <div className="flex flex-col overflow-hidden">
-                                        <span className="text-xs text-text-muted">Household ID</span>
-                                        <span className="font-mono text-sm font-bold text-text-main truncate pr-2">{householdId || 'Loading...'}</span>
+                    {/* Household Info (Only in Cloud Mode) */}
+                    {ENABLE_CLOUD_SYNC && (
+                        <div className="space-y-2 animate-enter-up" style={{ animationDelay: '0.1s' }}>
+                            <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider ml-2">Household</h3>
+                            <div className="bg-white rounded-2xl p-1 shadow-soft">
+                                <div className="flex items-center justify-between p-4">
+                                    <div className="flex items-center gap-3 overflow-hidden">
+                                        <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 shrink-0">
+                                            <IonIcon icon={homeOutline} />
+                                        </div>
+                                        <div className="flex flex-col overflow-hidden">
+                                            <span className="text-xs text-text-muted">Household ID</span>
+                                            <span className="font-mono text-sm font-bold text-text-main truncate pr-2">{householdId || 'Loading...'}</span>
+                                        </div>
                                     </div>
                                 </div>
+                                <div className="flex gap-1">
+                                    <IonButton
+                                        fill="clear"
+                                        size="small"
+                                        onClick={() => setShowEditHouseholdAlert(true)}
+                                        className="bg-gray-50 rounded-xl m-0 h-10 w-10 text-gray-500 hover:text-primary"
+                                    >
+                                        <IonIcon slot="icon-only" icon={createOutline} />
+                                    </IonButton>
+                                    <IonButton
+                                        fill="clear"
+                                        size="small"
+                                        onClick={() => copyToClipboard(householdId)}
+                                        className="bg-gray-50 rounded-xl m-0 h-10 w-10 text-gray-500 hover:text-primary"
+                                    >
+                                        <IonIcon slot="icon-only" icon={copyOutline} />
+                                    </IonButton>
+                                </div>
                             </div>
-                            <div className="flex gap-1">
-                                <IonButton
-                                    fill="clear"
-                                    size="small"
-                                    onClick={() => setShowEditHouseholdAlert(true)}
-                                    className="bg-gray-50 rounded-xl m-0 h-10 w-10 text-gray-500 hover:text-primary"
-                                >
-                                    <IonIcon slot="icon-only" icon={createOutline} />
-                                </IonButton>
-                                <IonButton
-                                    fill="clear"
-                                    size="small"
-                                    onClick={() => copyToClipboard(householdId)}
-                                    className="bg-gray-50 rounded-xl m-0 h-10 w-10 text-gray-500 hover:text-primary"
-                                >
-                                    <IonIcon slot="icon-only" icon={copyOutline} />
-                                </IonButton>
+                            <div className="px-4 pb-4">
+                                <p className="text-xs text-gray-400 bg-gray-50 p-3 rounded-xl leading-relaxed">
+                                    Share this ID with family members to sync your shopping lists together. Or enter their ID to join them.
+                                </p>
                             </div>
                         </div>
-                    </div>
+                    )}
 
-                    <div className="px-4 pb-4">
-                        <p className="text-xs text-gray-400 bg-gray-50 p-3 rounded-xl leading-relaxed">
-                            Share this ID with family members to sync your shopping lists together. Or enter their ID to join them.
-                        </p>
-                    </div>
-
-                    {/* Household Members List */}
-                    {members.length > 0 && (
+                    {/* Household Members List (Only in Cloud Mode) */}
+                    {ENABLE_CLOUD_SYNC && members.length > 0 && (
                         <div className="px-4 pb-2">
                             <h4 className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">Members</h4>
                             <div className="flex flex-wrap gap-2">
@@ -206,6 +219,7 @@ const Settings: React.FC = () => {
                             </div>
                         </div>
                     )}
+
 
 
                     <IonAlert
@@ -299,29 +313,38 @@ const Settings: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Logout Button */}
-                    <div className="pt-4 animate-enter-up" style={{ animationDelay: '0.3s' }}>
-                        <button
-                            onClick={handleSignOut}
-                            className="w-full bg-white border-2 border-red-50 text-red-500 font-bold py-4 rounded-2xl shadow-sm hover:bg-red-50 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                        >
-                            <IonIcon icon={logOutOutline} />
-                            Sign Out
-                        </button>
-
-                        <div className="mt-8 text-center">
+                    {/* Logout Button (Only in Cloud Mode) */}
+                    {ENABLE_CLOUD_SYNC && (
+                        <div className="pt-4 animate-enter-up" style={{ animationDelay: '0.3s' }}>
                             <button
-                                onClick={() => setShowDeleteAlert(true)}
-                                className="text-xs text-red-300 hover:text-red-500 underline transition-colors"
+                                onClick={handleSignOut}
+                                className="w-full bg-white border-2 border-red-50 text-red-500 font-bold py-4 rounded-2xl shadow-sm hover:bg-red-50 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                             >
-                                Delete Account Permanently
+                                <IonIcon icon={logOutOutline} />
+                                Sign Out
                             </button>
-                        </div>
 
-                        <p className="text-center text-xs text-gray-300 mt-4">
-                            Made with ❤️ by Shoplist Team
-                        </p>
-                    </div>
+                            <div className="mt-8 text-center">
+                                <button
+                                    onClick={() => setShowDeleteAlert(true)}
+                                    className="text-xs text-red-300 hover:text-red-500 underline transition-colors"
+                                >
+                                    Delete Account Permanently
+                                </button>
+                            </div>
+
+                            <p className="text-center text-xs text-gray-300 mt-4">
+                                Made with ❤️ by Shoplist Team
+                            </p>
+                        </div>
+                    )}
+                    {!ENABLE_CLOUD_SYNC && (
+                        <div className="pt-4 text-center">
+                            <p className="text-xs text-gray-300 mt-4">
+                                Made with ❤️ by Shoplist Team
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 <IonAlert

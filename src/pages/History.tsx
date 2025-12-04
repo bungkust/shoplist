@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonIcon, IonToast } from '@ionic/react';
+import React, { useState, useEffect, useRef } from 'react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonIcon, IonToast, IonActionSheet, useIonViewWillEnter } from '@ionic/react';
 import { refreshOutline, timeOutline } from 'ionicons/icons';
 import { supabase } from '../services/supabaseClient';
-import type { TransactionHistory } from '../types/supabase';
+import type { TransactionHistory, ListMaster } from '../types/supabase';
+import { ENABLE_CLOUD_SYNC } from '../config';
+import { localItemService, localListService } from '../services/localService';
 
 const History: React.FC = () => {
   const [history, setHistory] = useState<TransactionHistory[]>([]);
@@ -11,8 +13,18 @@ const History: React.FC = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [householdId, setHouseholdId] = useState<string | null>(null);
 
+  // Rebuy Logic States
+  const [showListSelection, setShowListSelection] = useState(false);
+  const [availableLists, setAvailableLists] = useState<ListMaster[]>([]);
+  const [selectedItemForRestock, setSelectedItemForRestock] = useState<TransactionHistory | null>(null);
+
   useEffect(() => {
     const getProfile = async () => {
+      if (!ENABLE_CLOUD_SYNC) {
+        setHouseholdId('guest_household');
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data } = await supabase
@@ -26,14 +38,19 @@ const History: React.FC = () => {
     getProfile();
   }, []);
 
-  useEffect(() => {
-    if (householdId) {
-      fetchHistory();
-    }
-  }, [householdId]);
+  const fetchHistoryRef = useRef<() => void>(() => { });
 
   const fetchHistory = async () => {
     setLoading(true);
+    if (!householdId) return;
+
+    if (!ENABLE_CLOUD_SYNC) {
+      const data = await localItemService.getHistory(householdId);
+      setHistory(data);
+      setLoading(false);
+      return;
+    }
+
     const { data } = await supabase
       .from('transaction_history')
       .select('*')
@@ -44,40 +61,87 @@ const History: React.FC = () => {
     setLoading(false);
   };
 
-  const handleRestock = async (item: TransactionHistory) => {
+  // Update ref whenever fetchHistory (or dependencies) changes
+  // Since fetchHistory depends on householdId, and is recreated on render if we used useCallback (but we didn't),
+  // we need to be careful. Here fetchHistory is defined in the body.
+  // It closes over householdId.
+  fetchHistoryRef.current = fetchHistory;
+
+  useIonViewWillEnter(() => {
+    if (householdId) {
+      fetchHistoryRef.current();
+    }
+  });
+
+  useEffect(() => {
+    if (householdId) {
+      fetchHistory();
+    }
+  }, [householdId]);
+
+  const handleRestockClick = async (item: TransactionHistory) => {
     if (!householdId) return;
 
-    // Fetch the first available list for the household
-    const { data: lists } = await supabase
-      .from('list_master')
-      .select('id')
-      .eq('household_id', householdId)
-      .limit(1);
+    let lists: ListMaster[] = [];
 
-    if (!lists || lists.length === 0) {
+    if (!ENABLE_CLOUD_SYNC) {
+      lists = await localListService.getLists(householdId);
+    } else {
+      const { data } = await supabase
+        .from('list_master')
+        .select('*')
+        .eq('household_id', householdId);
+      lists = data || [];
+    }
+
+    if (lists.length === 0) {
       setToastMessage('No shopping list found. Please create one first.');
       setShowToast(true);
       return;
     }
 
-    const targetListId = lists[0].id;
+    if (lists.length === 1) {
+      // Auto-add to the only list
+      executeRestock(item, lists[0].id);
+    } else {
+      // Show selection
+      setAvailableLists(lists);
+      setSelectedItemForRestock(item);
+      setShowListSelection(true);
+    }
+  };
 
-    const { error } = await supabase
-      .from('shopping_items')
-      .insert([{
+  const executeRestock = async (item: TransactionHistory, listId: string) => {
+    if (!householdId) return;
+
+    if (!ENABLE_CLOUD_SYNC) {
+      await localItemService.addItem({
         item_name: item.item_name,
         quantity: item.total_size,
         unit: item.base_unit,
         household_id: householdId,
-        list_id: targetListId
-      }]);
-
-    if (!error) {
+        list_id: listId
+      });
       setToastMessage('Item added back to list!');
       setShowToast(true);
     } else {
-      setToastMessage('Failed to add item.');
-      setShowToast(true);
+      const { error } = await supabase
+        .from('shopping_items')
+        .insert([{
+          item_name: item.item_name,
+          quantity: item.total_size,
+          unit: item.base_unit,
+          household_id: householdId,
+          list_id: listId
+        }]);
+
+      if (!error) {
+        setToastMessage('Item added back to list!');
+        setShowToast(true);
+      } else {
+        setToastMessage('Failed to add item.');
+        setShowToast(true);
+      }
     }
   };
 
@@ -129,7 +193,7 @@ const History: React.FC = () => {
                     fill="clear"
                     size="small"
                     className="h-10 w-10 rounded-full hover:bg-blue-50 text-primary transition-colors"
-                    onClick={() => handleRestock(item)}
+                    onClick={() => handleRestockClick(item)}
                   >
                     <IonIcon slot="icon-only" icon={refreshOutline} />
                   </IonButton>
@@ -145,6 +209,29 @@ const History: React.FC = () => {
           duration={2000}
           position="top"
           color="success"
+        />
+
+        <IonActionSheet
+          isOpen={showListSelection}
+          onDidDismiss={() => setShowListSelection(false)}
+          header="Select List to Restock"
+          buttons={[
+            ...availableLists.map(list => ({
+              text: list.name,
+              handler: () => {
+                if (selectedItemForRestock) {
+                  executeRestock(selectedItemForRestock, list.id);
+                }
+              }
+            })),
+            {
+              text: 'Cancel',
+              role: 'cancel',
+              data: {
+                action: 'cancel',
+              },
+            },
+          ]}
         />
       </IonContent>
     </IonPage>

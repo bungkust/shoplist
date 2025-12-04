@@ -37,22 +37,13 @@ import './theme/variables.css';
 
 setupIonicReact();
 
+import { ENABLE_CLOUD_SYNC } from './config';
+
 const App: React.FC = () => {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
     // Native Status Bar & App State
     const initNative = async () => {
       try {
@@ -64,6 +55,24 @@ const App: React.FC = () => {
     };
     initNative();
 
+    if (!ENABLE_CLOUD_SYNC) {
+      // Offline Mode: Simulate a session
+      setSession({ user: { id: 'guest', email: 'guest@shoplist.local' } });
+      setLoading(false);
+      return;
+    }
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
     return () => subscription.unsubscribe();
   }, []);
 
@@ -71,7 +80,7 @@ const App: React.FC = () => {
     return <IonApp><div className="flex items-center justify-center h-full">Loading...</div></IonApp>;
   }
 
-  if (!session) {
+  if (!session && ENABLE_CLOUD_SYNC) {
     return (
       <IonApp>
         <IonReactRouter>
