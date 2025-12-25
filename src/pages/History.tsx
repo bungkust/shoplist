@@ -9,6 +9,9 @@ import { localItemService, localListService } from '../services/localService';
 const History: React.FC = () => {
   const [history, setHistory] = useState<TransactionHistory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const PAGE_SIZE = 20;
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [householdId, setHouseholdId] = useState<string | null>(null);
@@ -40,26 +43,53 @@ const History: React.FC = () => {
 
   const fetchHistoryRef = useRef<() => void>(() => { });
 
-  const fetchHistory = async () => {
-    setLoading(true);
+  const fetchHistory = async (reset = false) => {
     if (!householdId) return;
 
+    const currentPage = reset ? 0 : page;
+    setLoading(true);
+
     if (!ENABLE_CLOUD_SYNC) {
-      const data = await localItemService.getHistory(householdId);
-      setHistory(data);
+      const data = await localItemService.getHistory(householdId, currentPage, PAGE_SIZE);
+      if (reset) {
+        setHistory(data);
+      } else {
+        setHistory(prev => [...prev, ...data]);
+      }
+      setHasMore(data.length === PAGE_SIZE);
       setLoading(false);
       return;
     }
+
+    const start = currentPage * PAGE_SIZE;
+    const end = start + PAGE_SIZE - 1;
 
     const { data } = await supabase
       .from('transaction_history')
       .select('*')
       .eq('household_id', householdId)
-      .order('purchased_at', { ascending: false });
+      .order('purchased_at', { ascending: false })
+      .range(start, end);
 
-    setHistory(data || []);
+    const newData = data || [];
+    if (reset) {
+      setHistory(newData);
+    } else {
+      setHistory(prev => [...prev, ...newData]);
+    }
+    setHasMore(newData.length === PAGE_SIZE);
     setLoading(false);
   };
+
+  const loadMore = () => {
+    setPage(prev => prev + 1);
+  };
+
+  useEffect(() => {
+    if (page > 0) {
+      fetchHistory(false);
+    }
+  }, [page]);
 
   // Update ref whenever fetchHistory (or dependencies) changes
   // Since fetchHistory depends on householdId, and is recreated on render if we used useCallback (but we didn't),
@@ -75,7 +105,8 @@ const History: React.FC = () => {
 
   useEffect(() => {
     if (householdId) {
-      fetchHistory();
+      setPage(0);
+      fetchHistory(true);
     }
   }, [householdId]);
 
@@ -153,7 +184,7 @@ const History: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen className="ion-padding">
-        <div className="max-w-md mx-auto pb-20">
+        <div className="max-w-md mx-auto">
           {loading ? (
             <p className="text-center text-text-muted mt-10">Loading history...</p>
           ) : history.length === 0 ? (
@@ -166,7 +197,7 @@ const History: React.FC = () => {
               {history.map((item, index) => (
                 <div
                   key={item.id}
-                  style={{ animationDelay: `${index * 0.05}s` }}
+                  style={{ animationDelay: `${(index % PAGE_SIZE) * 0.05}s` }}
                   className="animate-enter-up bg-white rounded-xl p-4 shadow-soft border border-gray-50 flex justify-between items-center group"
                 >
                   <div className="flex items-center gap-4">
@@ -199,6 +230,23 @@ const History: React.FC = () => {
                   </IonButton>
                 </div>
               ))}
+
+              {hasMore && (
+                <div className="pt-4">
+                  <IonButton
+                    expand="block"
+                    fill="outline"
+                    onClick={loadMore}
+                    disabled={loading}
+                    className="font-bold rounded-2xl"
+                  >
+                    {loading ? 'Loading...' : 'Load More'}
+                  </IonButton>
+                </div>
+              )}
+
+              {/* Spacer for Bottom Tabs */}
+              <div className="h-32"></div>
             </div>
           )}
         </div>

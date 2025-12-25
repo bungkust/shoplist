@@ -9,13 +9,14 @@ interface CheckoutModalProps {
     isOpen: boolean;
     onClose: () => void;
     item: ShoppingItem | null;
-    onConfirm: (finalPrice: number, totalSize: number, baseUnit: string) => void;
+    onConfirm: (finalPrice: number, totalSize: number, baseUnit: string, itemName: string) => void;
 }
 
 const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, onConfirm }) => {
     const [price, setPrice] = useState<string>('');
     const [size, setSize] = useState<string>('');
     const [unit, setUnit] = useState<string>('');
+    const [itemName, setItemName] = useState<string>('');
 
     // Smart Logic State
     const [lastPrice, setLastPrice] = useState<number | null>(null);
@@ -26,6 +27,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, on
             setPrice('');
             setSize(item.quantity.toString());
             setUnit(item.unit);
+            setItemName(item.item_name);
             setLastPrice(null);
             setPriceComparison(null);
             fetchLastPrice(item.item_name, item.unit);
@@ -61,8 +63,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, on
     }, [price, size, lastPrice]);
 
     const handleConfirm = () => {
-        if (price && size && unit) {
-            onConfirm(parseFloat(price), parseFloat(size), unit);
+        if (price && size && unit && itemName) {
+            onConfirm(parseFloat(price), parseFloat(size), unit, itemName);
             onClose();
         }
     };
@@ -90,7 +92,15 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, on
                     <div className="space-y-6 pt-2">
 
                         <div className="text-center animate-enter-up">
-                            <h2 className="text-2xl font-bold text-text-main">{item?.item_name}</h2>
+                            {/* Editable Item Name */}
+                            <div className="bg-gray-50 rounded-2xl px-4 py-2 mb-2 focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                                <IonInput
+                                    value={itemName}
+                                    onIonChange={e => setItemName(e.detail.value!)}
+                                    className="font-bold text-xl text-center text-text-main"
+                                    placeholder="Item Name"
+                                />
+                            </div>
                             <p className="text-text-muted">Enter details to save to history.</p>
                         </div>
 
@@ -163,8 +173,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, on
                         <IonButton
                             expand="block"
                             onClick={handleConfirm}
-                            disabled={!price || !size || !unit}
-                            className={`h-14 font-bold rounded-2xl shadow-floating transition-transform mt-6 ${(!price || !size || !unit) ? 'opacity-50' : 'hover:scale-[1.02]'
+                            disabled={!price || !size || !unit || !itemName}
+                            className={`h-14 font-bold rounded-2xl shadow-floating transition-transform mt-6 ${(!price || !size || !unit || !itemName) ? 'opacity-50' : 'hover:scale-[1.02]'
                                 }`}
                             shape="round"
                         >

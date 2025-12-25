@@ -8,11 +8,15 @@ const STORAGE_KEYS = {
 };
 
 export const localListService: ListService = {
-    async getLists(_householdId: string): Promise<ListMaster[]> {
+    async getLists(_householdId: string, page: number = 0, pageSize: number = 20): Promise<ListMaster[]> {
         const raw = localStorage.getItem(STORAGE_KEYS.LISTS);
         const lists: ListMaster[] = raw ? JSON.parse(raw) : [];
         // Filter by householdId if we were supporting multiple guest users, but for now just return all
-        return lists.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        const sorted = lists.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+        const start = page * pageSize;
+        const end = start + pageSize;
+        return sorted.slice(start, end);
     },
 
     async createList(householdId: string, name: string): Promise<ListMaster | null> {
@@ -55,12 +59,16 @@ export const localListService: ListService = {
 };
 
 export const localItemService: ItemService = {
-    async getItems(listId: string): Promise<ShoppingItem[]> {
+    async getItems(listId: string, page: number = 0, pageSize: number = 20): Promise<ShoppingItem[]> {
         const raw = localStorage.getItem(STORAGE_KEYS.ITEMS);
         const items: ShoppingItem[] = raw ? JSON.parse(raw) : [];
-        return items
+        const sorted = items
             .filter(i => i.list_id === listId)
             .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+        const start = page * pageSize;
+        const end = start + pageSize;
+        return sorted.slice(start, end);
     },
 
     async addItem(itemData: Omit<ShoppingItem, 'id' | 'created_at' | 'is_purchased'>): Promise<ShoppingItem | null> {
@@ -98,7 +106,7 @@ export const localItemService: ItemService = {
         localStorage.setItem(STORAGE_KEYS.ITEMS, JSON.stringify(newItems));
     },
 
-    async moveToHistory(item: ShoppingItem, finalPrice: number, totalSize: number, baseUnit: string): Promise<void> {
+    async moveToHistory(item: ShoppingItem, finalPrice: number, totalSize: number, baseUnit: string, itemName: string): Promise<void> {
         // 1. Add to History
         const rawHistory = localStorage.getItem(STORAGE_KEYS.HISTORY);
         const history = rawHistory ? JSON.parse(rawHistory) : [];
@@ -106,7 +114,7 @@ export const localItemService: ItemService = {
         history.push({
             id: Math.random().toString(36).substr(2, 9),
             household_id: item.household_id,
-            item_name: item.item_name,
+            item_name: itemName,
             final_price: finalPrice,
             total_size: totalSize,
             base_unit: baseUnit,
@@ -118,9 +126,13 @@ export const localItemService: ItemService = {
         await this.deleteItem(item.id);
     },
 
-    async getHistory(_householdId: string): Promise<TransactionHistory[]> {
+    async getHistory(_householdId: string, page: number = 0, pageSize: number = 20): Promise<TransactionHistory[]> {
         const raw = localStorage.getItem(STORAGE_KEYS.HISTORY);
         const history: TransactionHistory[] = raw ? JSON.parse(raw) : [];
-        return history.sort((a, b) => new Date(b.purchased_at).getTime() - new Date(a.purchased_at).getTime());
+        const sorted = history.sort((a, b) => new Date(b.purchased_at).getTime() - new Date(a.purchased_at).getTime());
+
+        const start = page * pageSize;
+        const end = start + pageSize;
+        return sorted.slice(start, end);
     }
 };

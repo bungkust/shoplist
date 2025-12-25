@@ -41,7 +41,7 @@ const Home: React.FC = () => {
         getProfile();
     }, []);
 
-    const { lists, loading, createList, updateList, deleteList, refreshLists } = useLists(householdId);
+    const { lists, loading, createList, updateList, deleteList, refreshLists, hasMore, loadMoreLists } = useLists(householdId);
 
     const refreshListsRef = useRef(refreshLists);
     refreshListsRef.current = refreshLists;
@@ -106,7 +106,7 @@ const Home: React.FC = () => {
             </IonHeader>
 
             <IonContent fullscreen>
-                <div className="max-w-md mx-auto pb-20 pt-2 px-4">
+                <div className="max-w-md mx-auto pt-2 px-4">
 
                     {/* Welcome Section */}
                     <div className="mb-6 animate-enter-up">
@@ -151,6 +151,23 @@ const Home: React.FC = () => {
                                     </IonButton>
                                 </div>
                             ))}
+
+                            {hasMore && (
+                                <div className="pt-4">
+                                    <IonButton
+                                        expand="block"
+                                        fill="outline"
+                                        onClick={loadMoreLists}
+                                        disabled={loading}
+                                        className="font-bold rounded-2xl"
+                                    >
+                                        {loading ? 'Loading...' : 'Load More'}
+                                    </IonButton>
+                                </div>
+                            )}
+
+                            {/* Spacer for Bottom Tabs */}
+                            <div className="h-32"></div>
                         </div>
                     )}
 

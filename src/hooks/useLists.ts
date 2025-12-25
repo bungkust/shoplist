@@ -7,11 +7,18 @@ import { localListService } from '../services/localService';
 export const useLists = (householdId: string | null) => {
     const [lists, setLists] = useState<ListMaster[]>([]);
     const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const PAGE_SIZE = 20;
 
     useEffect(() => {
         if (!householdId) return;
 
-        fetchLists();
+        if (page === 0) {
+            fetchLists(true);
+        } else {
+            fetchLists(false);
+        }
 
         // Realtime Subscription for Lists (Only in Cloud Mode)
         if (ENABLE_CLOUD_SYNC) {
@@ -27,7 +34,8 @@ export const useLists = (householdId: string | null) => {
                     },
                     (payload) => {
                         console.log('List change:', payload);
-                        fetchLists();
+                        setPage(0); // Reset to first page on realtime update
+                        fetchLists(true);
                     }
                 )
                 .subscribe();
@@ -36,30 +44,53 @@ export const useLists = (householdId: string | null) => {
                 supabase.removeChannel(channel);
             };
         }
-    }, [householdId]);
+    }, [householdId, page]);
 
-    const fetchLists = async () => {
+    const fetchLists = async (reset = false) => {
         if (!householdId) return;
         setLoading(true);
+
+        const currentPage = reset ? 0 : page;
+
         try {
             if (!ENABLE_CLOUD_SYNC) {
-                const data = await localListService.getLists(householdId);
-                setLists(data);
+                const data = await localListService.getLists(householdId, currentPage, PAGE_SIZE);
+                if (reset) {
+                    setLists(data);
+                } else {
+                    setLists(prev => [...prev, ...data]);
+                }
+                setHasMore(data.length === PAGE_SIZE);
             } else {
+                const start = currentPage * PAGE_SIZE;
+                const end = start + PAGE_SIZE - 1;
+
                 const { data, error } = await supabase
                     .from('list_master')
                     .select('*')
                     .eq('household_id', householdId)
-                    .order('created_at', { ascending: false });
+                    .order('created_at', { ascending: false })
+                    .range(start, end);
 
                 if (error) throw error;
-                setLists(data || []);
+
+                const newData = data || [];
+                if (reset) {
+                    setLists(newData);
+                } else {
+                    setLists(prev => [...prev, ...newData]);
+                }
+                setHasMore(newData.length === PAGE_SIZE);
             }
         } catch (error) {
             console.error('Error fetching lists:', error);
         } finally {
             setLoading(false);
         }
+    };
+
+    const loadMoreLists = () => {
+        setPage(prev => prev + 1);
     };
 
     const createList = async (name: string) => {
@@ -146,6 +177,11 @@ export const useLists = (householdId: string | null) => {
         createList,
         updateList,
         deleteList,
-        refreshLists: fetchLists
+        refreshLists: () => {
+            setPage(0);
+            fetchLists(true);
+        },
+        hasMore,
+        loadMoreLists
     };
 };

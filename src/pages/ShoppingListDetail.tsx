@@ -1,4 +1,4 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonFab, IonFabButton, IonToast, IonButtons, IonBackButton, useIonViewWillEnter } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonFab, IonFabButton, IonToast, IonButtons, IonBackButton, IonButton, useIonViewWillEnter } from '@ionic/react';
 import { micOutline } from 'ionicons/icons';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { useState, useEffect, useRef } from 'react';
@@ -28,7 +28,7 @@ const ShoppingListDetail: React.FC = () => {
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<ShoppingItem | null>(null);
 
-    const { items, loading, addItem, toggleItem, deleteItem, moveToHistory, refreshItems } = useShoppingList(householdId, listId || null);
+    const { items, loading, addItem, toggleItem, deleteItem, moveToHistory, refreshItems, hasMore, loadMoreItems } = useShoppingList(householdId, listId || null);
 
     const refreshItemsRef = useRef(refreshItems);
     refreshItemsRef.current = refreshItems;
@@ -123,9 +123,9 @@ const ShoppingListDetail: React.FC = () => {
         }
     }, [isListening, transcript, isModalOpen, householdId]);
 
-    const handleCheckoutConfirm = (finalPrice: number, totalSize: number, baseUnit: string) => {
+    const handleCheckoutConfirm = (finalPrice: number, totalSize: number, baseUnit: string, itemName: string) => {
         if (selectedItem) {
-            moveToHistory(selectedItem.id, finalPrice, totalSize, baseUnit);
+            moveToHistory(selectedItem.id, finalPrice, totalSize, baseUnit, itemName);
             setToastMessage('Saved to History');
             setShowToast(true);
         }
@@ -177,7 +177,7 @@ const ShoppingListDetail: React.FC = () => {
             </IonHeader>
 
             <IonContent fullscreen>
-                <div className="flex flex-col h-full max-w-md mx-auto relative px-4 pt-2 pb-24">
+                <div className="flex flex-col min-h-full max-w-md mx-auto relative px-4 pt-2">
 
                     {/* Summary Header */}
                     <div className="flex items-center justify-between mb-4 animate-enter-up">
@@ -227,6 +227,23 @@ const ShoppingListDetail: React.FC = () => {
                                 />
                             ))
                         )}
+
+                        {hasMore && !loading && items.length > 0 && (
+                            <div className="pt-4">
+                                <IonButton
+                                    expand="block"
+                                    fill="outline"
+                                    onClick={loadMoreItems}
+                                    disabled={loading}
+                                    className="font-bold rounded-2xl"
+                                >
+                                    {loading ? 'Loading...' : 'Load More'}
+                                </IonButton>
+                            </div>
+                        )}
+
+                        {/* Spacer for Bottom Tabs */}
+                        <div className="h-32"></div>
                     </div>
 
                 </div>

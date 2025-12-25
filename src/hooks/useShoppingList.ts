@@ -7,6 +7,9 @@ import { localItemService } from '../services/localService';
 export const useShoppingList = (householdId: string | null, listId: string | null) => {
     const [items, setItems] = useState<ShoppingItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const PAGE_SIZE = 20;
 
     useEffect(() => {
         if (!householdId || !listId) {
@@ -16,7 +19,11 @@ export const useShoppingList = (householdId: string | null, listId: string | nul
         }
 
         setLoading(true);
-        fetchItems();
+        if (page === 0) {
+            fetchItems(true);
+        } else {
+            fetchItems(false);
+        }
 
         // Realtime Subscription (Only in Cloud Mode)
         if (ENABLE_CLOUD_SYNC) {
@@ -32,7 +39,8 @@ export const useShoppingList = (householdId: string | null, listId: string | nul
                     },
                     (payload) => {
                         console.log('Realtime change:', payload);
-                        fetchItems(); // Refresh on any change
+                        setPage(0); // Reset to first page on realtime update
+                        fetchItems(true); // Refresh on any change
                     }
                 )
                 .subscribe();
@@ -41,29 +49,53 @@ export const useShoppingList = (householdId: string | null, listId: string | nul
                 supabase.removeChannel(channel);
             };
         }
-    }, [householdId, listId]);
+    }, [householdId, listId, page]);
 
-    const fetchItems = async () => {
+    const fetchItems = async (reset = false) => {
         if (!householdId || !listId) return;
+
+        const currentPage = reset ? 0 : page;
+        setLoading(true);
+
         try {
             if (!ENABLE_CLOUD_SYNC) {
-                const data = await localItemService.getItems(listId);
-                setItems(data);
+                const data = await localItemService.getItems(listId, currentPage, PAGE_SIZE);
+                if (reset) {
+                    setItems(data);
+                } else {
+                    setItems(prev => [...prev, ...data]);
+                }
+                setHasMore(data.length === PAGE_SIZE);
             } else {
+                const start = currentPage * PAGE_SIZE;
+                const end = start + PAGE_SIZE - 1;
+
                 const { data, error } = await supabase
                     .from('shopping_items')
                     .select('*')
                     .eq('list_id', listId)
-                    .order('created_at', { ascending: false });
+                    .order('created_at', { ascending: false })
+                    .range(start, end);
 
                 if (error) throw error;
-                setItems(data || []);
+
+                const newData = data || [];
+                if (reset) {
+                    setItems(newData);
+                } else {
+                    setItems(prev => [...prev, ...newData]);
+                }
+                setHasMore(newData.length === PAGE_SIZE);
             }
         } catch (error) {
             console.error('Error fetching items:', error);
         } finally {
             setLoading(false);
         }
+    };
+
+    const loadMoreItems = () => {
+        setPage(prev => prev + 1);
     };
 
     const addItem = async (item: { item_name: string; quantity: number; unit: string }) => {
@@ -159,7 +191,7 @@ export const useShoppingList = (householdId: string | null, listId: string | nul
         }
     };
 
-    const moveToHistory = async (id: string, finalPrice: number, totalSize: number, baseUnit: string) => {
+    const moveToHistory = async (id: string, finalPrice: number, totalSize: number, baseUnit: string, itemName: string) => {
         const item = items.find(i => i.id === id);
         if (!item || !householdId) return;
 
@@ -169,14 +201,14 @@ export const useShoppingList = (householdId: string | null, listId: string | nul
 
         try {
             if (!ENABLE_CLOUD_SYNC) {
-                await localItemService.moveToHistory(item, finalPrice, totalSize, baseUnit);
+                await localItemService.moveToHistory(item, finalPrice, totalSize, baseUnit, itemName);
             } else {
                 // 1. Add to History
                 const { error: historyError } = await supabase
                     .from('transaction_history')
                     .insert([{
                         household_id: householdId,
-                        item_name: item.item_name,
+                        item_name: itemName,
                         final_price: finalPrice,
                         total_size: totalSize,
                         base_unit: baseUnit,
@@ -207,6 +239,11 @@ export const useShoppingList = (householdId: string | null, listId: string | nul
         toggleItem,
         deleteItem,
         moveToHistory,
-        refreshItems: fetchItems
+        refreshItems: () => {
+            setPage(0);
+            fetchItems(true);
+        },
+        hasMore,
+        loadMoreItems
     };
 };
