@@ -19,3 +19,10 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+# Capacitor ProGuard Rules
+-keep public class com.getcapacitor.** { *; }
+-keep public class com.getcapacitor.community.** { *; }
+-keep public class * extends com.getcapacitor.Plugin
+-keep public class com.google.android.gms.** { *; }
+-keep public class com.google.firebase.** { *; }
+-keep class androidx.appcompat.widget.** { *; }

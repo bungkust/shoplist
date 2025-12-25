@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonButton, IonToast, IonAlert } from '@ionic/react';
-import { personCircleOutline, logOutOutline, copyOutline, mailOutline, homeOutline, chevronDownOutline, createOutline } from 'ionicons/icons';
+import { App } from '@capacitor/app';
+import { personCircleOutline, logOutOutline, copyOutline, mailOutline, homeOutline, chevronDownOutline, createOutline, cloudDownloadOutline, cloudUploadOutline, trashOutline } from 'ionicons/icons';
+import { STORAGE_KEYS } from '../services/localService';
 import { supabase } from '../services/supabaseClient';
 import { useHistory } from 'react-router-dom';
 import { ENABLE_CLOUD_SYNC } from '../config';
@@ -20,6 +22,8 @@ const Settings: React.FC = () => {
     const [toastMessage, setToastMessage] = useState('');
     const [showDeleteAlert, setShowDeleteAlert] = useState(false);
     const [showEditHouseholdAlert, setShowEditHouseholdAlert] = useState(false);
+    const [showDeleteDataAlert, setShowDeleteDataAlert] = useState(false);
+    const [appVersion, setAppVersion] = useState<string>('Loading...');
     const history = useHistory();
 
     useEffect(() => {
@@ -63,6 +67,20 @@ const Settings: React.FC = () => {
         };
 
         getProfile();
+        getProfile();
+    }, []);
+
+    useEffect(() => {
+        const getAppInfo = async () => {
+            try {
+                const info = await App.getInfo();
+                setAppVersion(`v${info.version} (${info.build})`);
+            } catch (error) {
+                console.error('Error getting app info:', error);
+                setAppVersion('v1.0.0 (Web)');
+            }
+        };
+        getAppInfo();
     }, []);
 
     const handleSignOut = async () => {
@@ -123,6 +141,71 @@ const Settings: React.FC = () => {
         navigator.clipboard.writeText(text);
         setToastMessage('Copied to clipboard!');
         setShowToast(true);
+    };
+
+    const handleBackup = () => {
+        const data = {
+            lists: JSON.parse(localStorage.getItem(STORAGE_KEYS.LISTS) || '[]'),
+            items: JSON.parse(localStorage.getItem(STORAGE_KEYS.ITEMS) || '[]'),
+            history: JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]'),
+            version: 1,
+            timestamp: new Date().toISOString()
+        };
+
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `shoplist-backup-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        setToastMessage('Backup downloaded successfully!');
+        setShowToast(true);
+    };
+
+    const handleRestore = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const content = e.target?.result as string;
+                const data = JSON.parse(content);
+
+                if (!data.lists || !data.items) {
+                    throw new Error('Invalid backup file format');
+                }
+
+                localStorage.setItem(STORAGE_KEYS.LISTS, JSON.stringify(data.lists));
+                localStorage.setItem(STORAGE_KEYS.ITEMS, JSON.stringify(data.items));
+                if (data.history) {
+                    localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(data.history));
+                }
+
+                setToastMessage('Data restored successfully! Reloading...');
+                setShowToast(true);
+                setTimeout(() => window.location.reload(), 1500);
+            } catch (error) {
+                console.error('Restore error:', error);
+                setToastMessage('Failed to restore data. Invalid file.');
+                setShowToast(true);
+            }
+        };
+        reader.readAsText(file);
+    };
+
+    const handleDeleteData = () => {
+        localStorage.removeItem(STORAGE_KEYS.LISTS);
+        localStorage.removeItem(STORAGE_KEYS.ITEMS);
+        localStorage.removeItem(STORAGE_KEYS.HISTORY);
+
+        setToastMessage('All data deleted. Reloading...');
+        setShowToast(true);
+        setTimeout(() => window.location.reload(), 1500);
     };
 
     return (
@@ -254,7 +337,7 @@ const Settings: React.FC = () => {
                         <div className="bg-white rounded-2xl overflow-hidden shadow-soft">
                             <div className="p-4 flex items-center justify-between border-b border-gray-50">
                                 <span className="text-text-main font-medium">Version</span>
-                                <span className="text-text-muted text-sm">v1.0.0 (Beta)</span>
+                                <span className="text-text-muted text-sm">{appVersion}</span>
                             </div>
                             <div className="p-4 flex items-center justify-between border-b border-gray-50">
                                 <span className="text-text-main font-medium">Theme</span>

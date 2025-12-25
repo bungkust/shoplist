@@ -1,7 +1,7 @@
 import type { ListService, ItemService } from './types';
 import type { ListMaster, ShoppingItem, TransactionHistory } from '../types/supabase';
 
-const STORAGE_KEYS = {
+export const STORAGE_KEYS = {
     LISTS: 'guest_lists',
     ITEMS: 'guest_items',
     HISTORY: 'guest_history'
