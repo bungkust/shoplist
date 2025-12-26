@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonButton, IonToast, IonAlert } from '@ionic/react';
 import { App } from '@capacitor/app';
-import { personCircleOutline, logOutOutline, copyOutline, mailOutline, homeOutline, chevronDownOutline, createOutline, cloudDownloadOutline, cloudUploadOutline, trashOutline } from 'ionicons/icons';
-import { STORAGE_KEYS } from '../services/localService';
+import { personCircleOutline, logOutOutline, copyOutline, mailOutline, homeOutline, chevronDownOutline, createOutline } from 'ionicons/icons';
+// import { STORAGE_KEYS } from '../services/localService';
 import { supabase } from '../services/supabaseClient';
 import { useHistory } from 'react-router-dom';
 import { ENABLE_CLOUD_SYNC } from '../config';
@@ -22,7 +22,7 @@ const Settings: React.FC = () => {
     const [toastMessage, setToastMessage] = useState('');
     const [showDeleteAlert, setShowDeleteAlert] = useState(false);
     const [showEditHouseholdAlert, setShowEditHouseholdAlert] = useState(false);
-    const [showDeleteDataAlert, setShowDeleteDataAlert] = useState(false);
+    // const [showDeleteDataAlert, setShowDeleteDataAlert] = useState(false);
     const [appVersion, setAppVersion] = useState<string>('Loading...');
     const history = useHistory();
 
@@ -143,6 +143,7 @@ const Settings: React.FC = () => {
         setShowToast(true);
     };
 
+    /*
     const handleBackup = () => {
         const data = {
             lists: JSON.parse(localStorage.getItem(STORAGE_KEYS.LISTS) || '[]'),
@@ -207,6 +208,7 @@ const Settings: React.FC = () => {
         setShowToast(true);
         setTimeout(() => window.location.reload(), 1500);
     };
+    */
 
     return (
         <IonPage>

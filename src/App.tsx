@@ -13,6 +13,8 @@ import ShoppingListDetail from './pages/ShoppingListDetail';
 import Settings from './pages/Settings';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
+import Welcome from './pages/Welcome';
+import Onboarding from './pages/Onboarding';
 import { listOutline, timeOutline, calculatorOutline, settingsOutline } from 'ionicons/icons';
 import { StatusBar, Style } from '@capacitor/status-bar';
 
@@ -42,6 +44,7 @@ import { ENABLE_CLOUD_SYNC } from './config';
 const App: React.FC = () => {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     // Native Status Bar & App State
@@ -54,6 +57,13 @@ const App: React.FC = () => {
       }
     };
     initNative();
+
+    // Check App Initialization
+    const checkInit = () => {
+      const init = localStorage.getItem('app_initialized');
+      setIsInitialized(init === 'true');
+    };
+    checkInit();
 
     if (!ENABLE_CLOUD_SYNC) {
       // Offline Mode: Simulate a session
@@ -78,6 +88,27 @@ const App: React.FC = () => {
 
   if (loading) {
     return <IonApp><div className="flex items-center justify-center h-full">Loading...</div></IonApp>;
+  }
+
+  // New User / Not Initialized Flow
+  if (!isInitialized) {
+    return (
+      <IonApp>
+        <IonReactRouter>
+          <IonRouterOutlet>
+            <Route exact path="/welcome">
+              <Welcome />
+            </Route>
+            <Route exact path="/onboarding">
+              <Onboarding />
+            </Route>
+            <Route>
+              <Redirect to="/welcome" />
+            </Route>
+          </IonRouterOutlet>
+        </IonReactRouter>
+      </IonApp>
+    );
   }
 
   if (!session && ENABLE_CLOUD_SYNC) {
