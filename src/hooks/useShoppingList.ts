@@ -191,7 +191,7 @@ export const useShoppingList = (householdId: string | null, listId: string | nul
         }
     };
 
-    const moveToHistory = async (id: string, finalPrice: number, totalSize: number, baseUnit: string, itemName: string) => {
+    const moveToHistory = async (id: string, finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string) => {
         const item = items.find(i => i.id === id);
         if (!item || !householdId) return;
 
@@ -201,7 +201,7 @@ export const useShoppingList = (householdId: string | null, listId: string | nul
 
         try {
             if (!ENABLE_CLOUD_SYNC) {
-                await localItemService.moveToHistory(item, finalPrice, totalSize, baseUnit, itemName);
+                await localItemService.moveToHistory(item, finalPrice, totalSize, baseUnit, itemName, category);
             } else {
                 // 1. Add to History
                 const { error: historyError } = await supabase
@@ -212,6 +212,7 @@ export const useShoppingList = (householdId: string | null, listId: string | nul
                         final_price: finalPrice,
                         total_size: totalSize,
                         base_unit: baseUnit,
+                        category: category,
                         purchased_at: new Date().toISOString()
                     }]);
 

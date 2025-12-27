@@ -106,7 +106,7 @@ export const localItemService: ItemService = {
         localStorage.setItem(STORAGE_KEYS.ITEMS, JSON.stringify(newItems));
     },
 
-    async moveToHistory(item: ShoppingItem, finalPrice: number, totalSize: number, baseUnit: string, itemName: string): Promise<void> {
+    async moveToHistory(item: ShoppingItem, finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string): Promise<void> {
         // 1. Add to History
         const rawHistory = localStorage.getItem(STORAGE_KEYS.HISTORY);
         const history = rawHistory ? JSON.parse(rawHistory) : [];
@@ -118,6 +118,7 @@ export const localItemService: ItemService = {
             final_price: finalPrice,
             total_size: totalSize,
             base_unit: baseUnit,
+            category: category,
             purchased_at: new Date().toISOString()
         });
         localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(history));

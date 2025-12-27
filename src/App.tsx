@@ -15,7 +15,8 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
 import Welcome from './pages/Welcome';
 import Onboarding from './pages/Onboarding';
-import { listOutline, timeOutline, calculatorOutline, settingsOutline } from 'ionicons/icons';
+import Statistics from './pages/Statistics';
+import { listOutline, timeOutline, calculatorOutline, settingsOutline, pieChartOutline } from 'ionicons/icons';
 import { StatusBar, Style } from '@capacitor/status-bar';
 
 /* Core CSS required for Ionic components to work properly */
@@ -142,6 +143,9 @@ const App: React.FC = () => {
             <Route exact path="/history">
               <History />
             </Route>
+            <Route exact path="/statistics">
+              <Statistics />
+            </Route>
             <Route exact path="/register">
               <Register />
             </Route>
@@ -180,6 +184,10 @@ const App: React.FC = () => {
             <IonTabButton tab="history" href="/history">
               <IonIcon icon={timeOutline} />
               <IonLabel>History</IonLabel>
+            </IonTabButton>
+            <IonTabButton tab="statistics" href="/statistics">
+              <IonIcon icon={pieChartOutline} />
+              <IonLabel>Stat</IonLabel>
             </IonTabButton>
             <IonTabButton tab="settings" href="/settings">
               <IonIcon icon={settingsOutline} />

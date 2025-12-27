@@ -33,5 +33,6 @@ export interface TransactionHistory {
     final_price: number;
     total_size: number;
     base_unit: string;
+    category?: string;
     purchased_at: string;
 }

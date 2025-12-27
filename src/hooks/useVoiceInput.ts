@@ -45,7 +45,7 @@ export const useVoiceInput = (): VoiceInputHook => {
         };
     }, []);
 
-    const startListening = async (lang: 'id-ID' | 'en-US' = 'id-ID') => {
+    const startListening = async (lang?: 'id-ID' | 'en-US') => {
         if (isListening || isBusy.current) return;
 
         isBusy.current = true;
@@ -76,13 +76,18 @@ export const useVoiceInput = (): VoiceInputHook => {
                 await new Promise(resolve => setTimeout(resolve, 150));
 
                 try {
-                    const result = await SpeechRecognition.start({
-                        language: lang,
+                    const options: any = {
                         maxResults: 5,
                         prompt: "Bicara sekarang...", // Localized prompt
                         partialResults: true,
                         popup: true // Enable native UI for better UX and silence handling
-                    });
+                    };
+
+                    if (lang) {
+                        options.language = lang;
+                    }
+
+                    const result = await SpeechRecognition.start(options);
 
                     // Handle final result
                     if (result.matches && result.matches.length > 0) {
@@ -105,7 +110,9 @@ export const useVoiceInput = (): VoiceInputHook => {
                 }
 
                 const recognition = new SpeechRecognitionWeb();
-                recognition.lang = lang;
+                if (lang) {
+                    recognition.lang = lang;
+                }
                 recognition.interimResults = true;
                 recognition.continuous = false;
 
