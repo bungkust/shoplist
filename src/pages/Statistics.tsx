@@ -48,6 +48,8 @@ const Statistics: React.FC = () => {
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
     };
 
+
+
     return (
         <IonPage>
             <IonHeader className="ion-no-border">
@@ -122,6 +124,34 @@ const Statistics: React.FC = () => {
                                 <div className="text-center py-10 text-gray-400">
                                     <IonIcon icon={trendingUpOutline} className="text-4xl mb-2" />
                                     <p>No spending data yet.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Recent Transactions (Read Only) */}
+                    <div>
+                        <h3 className="font-bold text-lg text-gray-800 mb-3 px-1">Recent Transactions</h3>
+                        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                            {transactions.slice(0, 5).map((t, i) => (
+                                <div
+                                    key={t.id}
+                                    className={`p-4 flex justify-between items-center ${i !== 4 ? 'border-b border-gray-100' : ''}`}
+                                >
+                                    <div>
+                                        <p className="font-bold text-gray-800">{t.item_name}</p>
+                                        <p className="text-xs text-gray-500">
+                                            {new Date(t.purchased_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                                        </p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-bold text-blue-600">{formatCurrency(t.final_price)}</p>
+                                    </div>
+                                </div>
+                            ))}
+                            {transactions.length === 0 && (
+                                <div className="p-6 text-center text-gray-400 text-sm">
+                                    No transactions found.
                                 </div>
                             )}
                         </div>

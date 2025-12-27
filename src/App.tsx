@@ -8,6 +8,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import History from './pages/History';
+import ItemDetail from './pages/ItemDetail';
 import Compare from './pages/Compare';
 import ShoppingListDetail from './pages/ShoppingListDetail';
 import Settings from './pages/Settings';
@@ -142,6 +143,9 @@ const App: React.FC = () => {
             </Route>
             <Route exact path="/history">
               <History />
+            </Route>
+            <Route exact path="/history/item/:itemName">
+              <ItemDetail />
             </Route>
             <Route exact path="/statistics">
               <Statistics />

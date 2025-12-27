@@ -11,6 +11,7 @@ import VoiceModal from '../components/VoiceModal';
 import CheckoutModal from '../components/CheckoutModal';
 import SmartInputBar from '../components/SmartInputBar';
 import { supabase } from '../services/supabaseClient';
+import { localListService } from '../services/localService';
 import type { ShoppingItem } from '../types/supabase';
 
 import { ENABLE_CLOUD_SYNC } from '../config';
@@ -65,7 +66,11 @@ const ShoppingListDetail: React.FC = () => {
         const getProfileAndList = async () => {
             if (!ENABLE_CLOUD_SYNC) {
                 setHouseholdId('guest_household');
-                // Optional: Fetch list name from local storage if needed
+                if (listId) {
+                    const lists = await localListService.getLists('guest_household');
+                    const list = lists.find(l => l.id === listId);
+                    if (list) setListName(list.name);
+                }
                 return;
             }
 
@@ -123,9 +128,9 @@ const ShoppingListDetail: React.FC = () => {
         }
     }, [isListening, transcript, isModalOpen, householdId]);
 
-    const handleCheckoutConfirm = (finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string) => {
+    const handleCheckoutConfirm = (finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string, storeName?: string) => {
         if (selectedItem) {
-            moveToHistory(selectedItem.id, finalPrice, totalSize, baseUnit, itemName, category);
+            moveToHistory(selectedItem.id, finalPrice, totalSize, baseUnit, itemName, category, listName, storeName);
             setToastMessage('Saved to History');
             setShowToast(true);
         }

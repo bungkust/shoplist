@@ -4,7 +4,13 @@ import type { ListMaster, ShoppingItem, TransactionHistory } from '../types/supa
 export const STORAGE_KEYS = {
     LISTS: 'guest_lists',
     ITEMS: 'guest_items',
-    HISTORY: 'guest_history'
+    HISTORY: 'guest_history',
+    STORES: 'guest_stores'
+};
+
+const getUserProfile = () => {
+    const raw = localStorage.getItem('user_profile');
+    return raw ? JSON.parse(raw) : { id: 'guest_household', name: 'Guest' };
 };
 
 export const localListService: ListService = {
@@ -19,16 +25,17 @@ export const localListService: ListService = {
         return sorted.slice(start, end);
     },
 
-    async createList(householdId: string, name: string): Promise<ListMaster | null> {
+    async createList(_householdId: string, name: string): Promise<ListMaster | null> {
         const raw = localStorage.getItem(STORAGE_KEYS.LISTS);
         const lists: ListMaster[] = raw ? JSON.parse(raw) : [];
+        const user = getUserProfile();
 
         const newList: ListMaster = {
             id: Math.random().toString(36).substr(2, 9),
             created_at: new Date().toISOString(),
             name: name,
-            household_id: householdId,
-            created_by: 'guest'
+            household_id: user.id, // Use user ID from profile
+            created_by: user.name
         };
 
         lists.unshift(newList);
@@ -58,6 +65,48 @@ export const localListService: ListService = {
     }
 };
 
+export const localStoreService = {
+    async getStores(_householdId: string): Promise<string[]> {
+        const rawStores = localStorage.getItem(STORAGE_KEYS.STORES);
+        const stores: string[] = rawStores ? JSON.parse(rawStores) : [];
+
+        const rawHistory = localStorage.getItem(STORAGE_KEYS.HISTORY);
+        const history: TransactionHistory[] = rawHistory ? JSON.parse(rawHistory) : [];
+
+        // Create a map of store -> last purchased date
+        const lastUsedMap = new Map<string, number>();
+
+        history.forEach(h => {
+            if (h.store_name) {
+                const time = new Date(h.purchased_at).getTime();
+                const current = lastUsedMap.get(h.store_name) || 0;
+                if (time > current) {
+                    lastUsedMap.set(h.store_name, time);
+                }
+            }
+        });
+
+        // Sort stores based on last used time (newest first)
+        return stores.sort((a, b) => {
+            const timeA = lastUsedMap.get(a) || 0;
+            const timeB = lastUsedMap.get(b) || 0;
+            return timeB - timeA;
+        });
+    },
+
+    async addStore(_householdId: string, name: string): Promise<string[]> {
+        const raw = localStorage.getItem(STORAGE_KEYS.STORES);
+        const stores: string[] = raw ? JSON.parse(raw) : [];
+
+        if (!stores.includes(name)) {
+            stores.push(name);
+            stores.sort();
+            localStorage.setItem(STORAGE_KEYS.STORES, JSON.stringify(stores));
+        }
+        return stores;
+    }
+};
+
 export const localItemService: ItemService = {
     async getItems(listId: string, page: number = 0, pageSize: number = 20): Promise<ShoppingItem[]> {
         const raw = localStorage.getItem(STORAGE_KEYS.ITEMS);
@@ -74,12 +123,14 @@ export const localItemService: ItemService = {
     async addItem(itemData: Omit<ShoppingItem, 'id' | 'created_at' | 'is_purchased'>): Promise<ShoppingItem | null> {
         const raw = localStorage.getItem(STORAGE_KEYS.ITEMS);
         const items: ShoppingItem[] = raw ? JSON.parse(raw) : [];
+        const user = getUserProfile();
 
         const newItem: ShoppingItem = {
             id: Math.random().toString(36).substr(2, 9),
             created_at: new Date().toISOString(),
             is_purchased: false,
-            ...itemData
+            ...itemData,
+            household_id: user.id // Ensure items belong to the user's household
         };
 
         items.unshift(newItem);
@@ -106,25 +157,28 @@ export const localItemService: ItemService = {
         localStorage.setItem(STORAGE_KEYS.ITEMS, JSON.stringify(newItems));
     },
 
-    async moveToHistory(item: ShoppingItem, finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string): Promise<void> {
+    async moveToHistory(item: ShoppingItem, finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string, listName?: string, storeName?: string): Promise<void> {
         // 1. Add to History
         const rawHistory = localStorage.getItem(STORAGE_KEYS.HISTORY);
         const history = rawHistory ? JSON.parse(rawHistory) : [];
+        const user = getUserProfile();
 
         history.push({
             id: Math.random().toString(36).substr(2, 9),
-            household_id: item.household_id,
+            household_id: user.id, // Use user ID
             item_name: itemName,
             final_price: finalPrice,
             total_size: totalSize,
             base_unit: baseUnit,
             category: category,
+            list_name: listName,
+            store_name: storeName,
             purchased_at: new Date().toISOString()
         });
         localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(history));
 
-        // 2. Delete from Items
-        await this.deleteItem(item.id);
+        // 2. Mark as Purchased (Don't delete)
+        await this.toggleItem(item.id, true);
     },
 
     async getHistory(_householdId: string, page: number = 0, pageSize: number = 20): Promise<TransactionHistory[]> {

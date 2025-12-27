@@ -191,17 +191,17 @@ export const useShoppingList = (householdId: string | null, listId: string | nul
         }
     };
 
-    const moveToHistory = async (id: string, finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string) => {
+    const moveToHistory = async (id: string, finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string, listName?: string, storeName?: string) => {
         const item = items.find(i => i.id === id);
         if (!item || !householdId) return;
 
-        // Optimistic Update: Remove from list
+        // Optimistic Update: Mark as purchased instead of removing
         const oldItems = [...items];
-        setItems(prev => prev.filter(i => i.id !== id));
+        setItems(prev => prev.map(i => i.id === id ? { ...i, is_purchased: true } : i));
 
         try {
             if (!ENABLE_CLOUD_SYNC) {
-                await localItemService.moveToHistory(item, finalPrice, totalSize, baseUnit, itemName, category);
+                await localItemService.moveToHistory(item, finalPrice, totalSize, baseUnit, itemName, category, listName, storeName);
             } else {
                 // 1. Add to History
                 const { error: historyError } = await supabase
@@ -213,18 +213,20 @@ export const useShoppingList = (householdId: string | null, listId: string | nul
                         total_size: totalSize,
                         base_unit: baseUnit,
                         category: category,
+                        list_name: listName,
+                        store_name: storeName,
                         purchased_at: new Date().toISOString()
                     }]);
 
                 if (historyError) throw historyError;
 
-                // 2. Delete from Shopping List
-                const { error: deleteError } = await supabase
+                // 2. Update Shopping Item (Mark as purchased)
+                const { error: updateError } = await supabase
                     .from('shopping_items')
-                    .delete()
+                    .update({ is_purchased: true })
                     .eq('id', id);
 
-                if (deleteError) throw deleteError;
+                if (updateError) throw updateError;
             }
 
         } catch (error) {

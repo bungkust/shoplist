@@ -34,5 +34,7 @@ export interface TransactionHistory {
     total_size: number;
     base_unit: string;
     category?: string;
+    store_name?: string;
+    list_name?: string;
     purchased_at: string;
 }

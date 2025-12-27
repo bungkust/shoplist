@@ -49,7 +49,7 @@ const ModernItemCard: React.FC<ModernItemCardProps> = ({ item, onToggle, onDelet
                 {/* Teks */}
                 <div className="flex flex-col">
                     {/* Judul Barang */}
-                    <span className={`text-lg font-semibold text-text-main transition-all duration-300 ${item.is_purchased ? 'line-through text-gray-400 decoration-2' : ''}`}>
+                    <span className={`text-base font-semibold text-text-main transition-all duration-300 ${item.is_purchased ? 'line-through text-gray-400 decoration-2' : ''}`}>
                         {item.item_name}
                     </span>
                     {/* Detail Qty & Unit */}

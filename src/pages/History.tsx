@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonIcon, IonToast, IonActionSheet, useIonViewWillEnter } from '@ionic/react';
-import { refreshOutline, timeOutline } from 'ionicons/icons';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonIcon, IonToast, IonActionSheet, useIonViewDidEnter, IonRefresher, IonRefresherContent } from '@ionic/react';
+import type { RefresherEventDetail } from '@ionic/react';
+import { refreshOutline, timeOutline, searchOutline, closeCircle } from 'ionicons/icons';
 import { supabase } from '../services/supabaseClient';
 import type { TransactionHistory, ListMaster } from '../types/supabase';
 import { ENABLE_CLOUD_SYNC } from '../config';
 import { localItemService, localListService } from '../services/localService';
+import { useHistory } from 'react-router-dom';
 
 const History: React.FC = () => {
-  const [history, setHistory] = useState<TransactionHistory[]>([]);
+  const history = useHistory();
+  const [historyData, setHistory] = useState<TransactionHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -15,6 +18,13 @@ const History: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [householdId, setHouseholdId] = useState<string | null>(null);
+
+  // Search & Filter
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | 'all'>('all');
+
+  // Detail Modal
+  // const [selectedHistoryItem, setSelectedHistoryItem] = useState<{ name: string, history: TransactionHistory[] } | null>(null);
 
   // Rebuy Logic States
   const [showListSelection, setShowListSelection] = useState(false);
@@ -41,7 +51,7 @@ const History: React.FC = () => {
     getProfile();
   }, []);
 
-  const fetchHistoryRef = useRef<() => void>(() => { });
+  const fetchHistoryRef = useRef<(reset?: boolean) => void>(() => { });
 
   const fetchHistory = async (reset = false) => {
     if (!householdId) return;
@@ -91,17 +101,20 @@ const History: React.FC = () => {
     }
   }, [page]);
 
-  // Update ref whenever fetchHistory (or dependencies) changes
-  // Since fetchHistory depends on householdId, and is recreated on render if we used useCallback (but we didn't),
-  // we need to be careful. Here fetchHistory is defined in the body.
-  // It closes over householdId.
   fetchHistoryRef.current = fetchHistory;
 
-  useIonViewWillEnter(() => {
+  useIonViewDidEnter(() => {
     if (householdId) {
-      fetchHistoryRef.current();
+      setPage(0);
+      fetchHistoryRef.current(true);
     }
   });
+
+  const doRefresh = async (event: CustomEvent<RefresherEventDetail>) => {
+    setPage(0);
+    await fetchHistory(true);
+    event.detail.complete();
+  };
 
   useEffect(() => {
     if (householdId) {
@@ -110,7 +123,8 @@ const History: React.FC = () => {
     }
   }, [householdId]);
 
-  const handleRestockClick = async (item: TransactionHistory) => {
+  const handleRestockClick = async (e: React.MouseEvent, item: TransactionHistory) => {
+    e.stopPropagation(); // Prevent opening detail modal
     if (!householdId) return;
 
     let lists: ListMaster[] = [];
@@ -176,55 +190,112 @@ const History: React.FC = () => {
     }
   };
 
+  const openItemDetail = (itemName: string) => {
+    // Navigate to detail page
+    history.push(`/history/item/${encodeURIComponent(itemName)}`);
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+  };
+
+  // Filter Logic
+  const filteredHistory = historyData.filter(t => {
+    const matchesSearch = t.item_name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || t.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const categories = ['all', ...Array.from(new Set(historyData.map(t => t.category || 'Lainnya')))];
+
   return (
     <IonPage>
-      <IonHeader>
+      <IonHeader className="ion-no-border">
         <IonToolbar>
           <IonTitle>History</IonTitle>
         </IonToolbar>
+        <div className="px-4 pb-2">
+          {/* Search Bar */}
+          <div className="bg-gray-100 rounded-xl flex items-center px-3 py-2 mb-3">
+            <IonIcon icon={searchOutline} className="text-gray-400 text-lg mr-2" />
+            <input
+              type="text"
+              placeholder="Search history..."
+              className="bg-transparent w-full outline-none text-gray-800 placeholder-gray-400"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm('')}>
+                <IonIcon icon={closeCircle} className="text-gray-400" />
+              </button>
+            )}
+          </div>
+
+          {/* Category Chips */}
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors
+                                    ${selectedCategory === cat
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+              >
+                {cat === 'all' ? 'All' : cat}
+              </button>
+            ))}
+          </div>
+        </div>
       </IonHeader>
-      <IonContent fullscreen className="ion-padding">
-        <div className="max-w-md mx-auto">
-          {loading ? (
-            <p className="text-center text-text-muted mt-10">Loading history...</p>
-          ) : history.length === 0 ? (
+      <IonContent fullscreen className="bg-gray-50">
+        <IonRefresher slot="fixed" onIonRefresh={doRefresh}>
+          <IonRefresherContent></IonRefresherContent>
+        </IonRefresher>
+        <div className="p-4 space-y-6 pb-20">
+          {loading && historyData.length === 0 ? (
+            <p className="text-center text-gray-400 mt-10">Loading history...</p>
+          ) : filteredHistory.length === 0 ? (
             <div className="text-center mt-20 opacity-60">
               <IonIcon icon={timeOutline} className="text-6xl text-gray-300" />
-              <p className="text-text-muted mt-2">No transaction history yet.</p>
+              <p className="text-gray-400 mt-2">No transactions found.</p>
             </div>
           ) : (
-            <div className="space-y-3 mt-4">
-              {history.map((item, index) => (
+            <div className="space-y-3">
+              {filteredHistory.map((item) => (
                 <div
                   key={item.id}
-                  style={{ animationDelay: `${(index % PAGE_SIZE) * 0.05}s` }}
-                  className="animate-enter-up bg-white rounded-xl p-4 shadow-soft border border-gray-50 flex justify-between items-center group"
+                  onClick={() => openItemDetail(item.item_name)}
+                  className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex justify-between items-center active:scale-[0.98] transition-transform"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="bg-gray-50 p-3 rounded-2xl text-gray-400 group-hover:bg-blue-50 group-hover:text-primary transition-colors duration-300">
+                    <div className="bg-blue-50 p-3 rounded-xl text-blue-500">
                       <IonIcon icon={timeOutline} className="text-xl" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-text-main text-lg leading-tight">{item.item_name}</h3>
+                      <h3 className="font-bold text-gray-800 text-base leading-tight">{item.item_name}</h3>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-sm font-medium text-primary">
-                          {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(item.final_price)}
+                        <span className="text-sm font-bold text-blue-600">
+                          {formatCurrency(item.final_price)}
                         </span>
                         <span className="text-xs text-gray-300">•</span>
-                        <span className="text-xs text-text-muted">
+                        <span className="text-xs text-gray-500">
                           {item.total_size} {item.base_unit}
                         </span>
                       </div>
                       <p className="text-[10px] text-gray-400 mt-0.5">
-                        {new Date(item.purchased_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {new Date(item.purchased_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {item.list_name && ` • ${item.list_name}`}
                       </p>
                     </div>
                   </div>
                   <IonButton
                     fill="clear"
                     size="small"
-                    className="h-10 w-10 rounded-full hover:bg-blue-50 text-primary transition-colors"
-                    onClick={() => handleRestockClick(item)}
+                    className="h-10 w-10 rounded-full hover:bg-blue-50 text-blue-600 transition-colors"
+                    onClick={(e) => handleRestockClick(e, item)}
                   >
                     <IonIcon slot="icon-only" icon={refreshOutline} />
                   </IonButton>
@@ -244,12 +315,10 @@ const History: React.FC = () => {
                   </IonButton>
                 </div>
               )}
-
-              {/* Spacer for Bottom Tabs */}
-              <div className="h-32"></div>
             </div>
           )}
         </div>
+
         <IonToast
           isOpen={showToast}
           onDidDismiss={() => setShowToast(false)}

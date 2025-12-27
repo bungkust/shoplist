@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { IonPage, IonContent, IonButton, IonIcon } from '@ionic/react';
-import { shieldCheckmarkOutline, micOutline, walletOutline, addCircleOutline } from 'ionicons/icons';
+import { shieldCheckmarkOutline, micOutline, walletOutline, addCircleOutline, personOutline } from 'ionicons/icons';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination } from 'swiper/modules';
 import 'swiper/css';
@@ -21,6 +21,7 @@ const Onboarding: React.FC = () => {
     const [activeIndex, setActiveIndex] = useState(0);
     const [tutorialListName, setTutorialListName] = useState("");
     const [tutorialItemName, setTutorialItemName] = useState("");
+    const [userName, setUserName] = useState("");
     const [language, setLanguage] = useState<Language>('id');
 
     const { isListening, transcript, startListening, stopListening, hasSupport } = useVoiceInput();
@@ -50,6 +51,14 @@ const Onboarding: React.FC = () => {
             bg: "bg-blue-100"
         },
         {
+            id: 'name',
+            icon: personOutline,
+            text: language === 'en' ? "What's your name?" : "Siapa nama kamu?",
+            color: "text-indigo-500",
+            bg: "bg-indigo-100",
+            isInput: true
+        },
+        {
             id: 'tutorial',
             icon: addCircleOutline,
             text: t.slide_tutorial_text,
@@ -76,14 +85,22 @@ const Onboarding: React.FC = () => {
     const progress = ((activeIndex + 1) / slides.length) * 100;
 
     const handleFinish = () => {
+        // Save User Profile
+        const userProfile = {
+            id: `user_${Date.now()}`,
+            name: userName || 'Guest',
+            created_at: new Date().toISOString()
+        };
+        localStorage.setItem('user_profile', JSON.stringify(userProfile));
+
         // Initialize default data with user input
         const listId = `gen_id_${Date.now()}`;
         const defaultList = [
             {
                 id: listId,
                 name: tutorialListName || (language === 'en' ? "My First List" : "Belanja Pertamaku"),
-                household_id: 'guest_household',
-                created_by: 'guest',
+                household_id: userProfile.id, // Use user ID as household ID for now
+                created_by: userProfile.name,
                 created_at: new Date().toISOString()
             }
         ];
@@ -96,7 +113,7 @@ const Onboarding: React.FC = () => {
                 quantity: 1,
                 unit: 'pcs',
                 is_purchased: false,
-                household_id: 'guest_household',
+                household_id: userProfile.id,
                 created_at: new Date().toISOString()
             }
         ] : [];
@@ -178,14 +195,34 @@ const Onboarding: React.FC = () => {
                                             <h2 className="text-3xl font-bold text-gray-900 leading-tight">
                                                 {slide.text}
                                             </h2>
-                                            {!slide.isInteractive && (
+                                            {!slide.isInteractive && !slide.isInput && (
                                                 <p className="text-gray-500 text-lg">
                                                     {index === 0 ? "Privacy first. Always." :
-                                                        index === 2 ? "Just speak naturally." :
+                                                        index === 3 ? "Just speak naturally." :
                                                             "Smart insights for you."}
                                                 </p>
                                             )}
                                         </div>
+
+                                        {/* Name Input Slide */}
+                                        {slide.isInput && (
+                                            <div className="w-full max-w-xs space-y-4 animate-fade-in-up delay-100">
+                                                <div className="bg-white/80 backdrop-blur-md p-6 rounded-3xl shadow-lg border border-white/50 space-y-4">
+                                                    <div className="space-y-2 text-left">
+                                                        <label className="text-xs font-bold text-gray-500 ml-1 uppercase tracking-wider">
+                                                            {language === 'en' ? 'Your Name' : 'Nama Panggilan'}
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            value={userName}
+                                                            onChange={(e) => setUserName(e.target.value)}
+                                                            className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all font-medium text-gray-800 placeholder:text-gray-400"
+                                                            placeholder={language === 'en' ? "e.g. Alex" : "Contoh: Budi"}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
 
                                         {/* Interactive Tutorial Slide */}
                                         {slide.isInteractive && (
