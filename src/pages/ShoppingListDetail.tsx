@@ -177,7 +177,9 @@ const ShoppingListDetail: React.FC = () => {
                     <IonButtons slot="start">
                         <IonBackButton defaultHref="/home" />
                     </IonButtons>
-                    <IonTitle>{listName}</IonTitle>
+                    <IonTitle className="px-12">
+                        <div className="truncate">{listName}</div>
+                    </IonTitle>
                 </IonToolbar>
             </IonHeader>
 
@@ -271,6 +273,7 @@ const ShoppingListDetail: React.FC = () => {
                     isOpen={isCheckoutOpen}
                     onClose={() => setIsCheckoutOpen(false)}
                     item={selectedItem}
+                    householdId={householdId}
                     onConfirm={handleCheckoutConfirm}
                 />
 

@@ -11,11 +11,11 @@ interface CheckoutModalProps {
     isOpen: boolean;
     onClose: () => void;
     item: ShoppingItem | null;
-
+    householdId: string | null;
     onConfirm: (finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string, storeName?: string) => void;
 }
 
-const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, onConfirm }) => {
+const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, householdId, onConfirm }) => {
     const [price, setPrice] = useState<string>('');
     const [size, setSize] = useState<string>('');
     const [unit, setUnit] = useState<string>('');
@@ -48,11 +48,13 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, on
 
     useEffect(() => {
         const loadStores = async () => {
-            const stores = await localStoreService.getStores('guest_household');
-            setAvailableStores(stores);
+            if (householdId) {
+                const stores = await localStoreService.getStores(householdId);
+                setAvailableStores(stores);
+            }
         };
         loadStores();
-    }, [isOpen]);
+    }, [isOpen, householdId]);
 
     // Smart Logic State
     const [lastPrice, setLastPrice] = useState<number | null>(null);
@@ -117,7 +119,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, on
         if (price && size && unit && itemName) {
             const finalStore = store.trim();
             if (finalStore) {
-                await localStoreService.addStore('guest_household', finalStore);
+                await localStoreService.addStore(householdId || 'local', finalStore);
             }
             onConfirm(parseFloat(price), parseFloat(size), unit, itemName, category || undefined, finalStore || undefined);
             onClose();
@@ -134,8 +136,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, on
         >
             <div className="flex flex-col h-full bg-white">
                 <IonHeader className="ion-no-border">
-                    <IonToolbar>
-                        <IonTitle className="text-base">Confirm Purchase</IonTitle>
+                    <IonToolbar style={{ '--min-height': '44px' }}>
+                        <IonTitle className="text-base ion-text-center">Confirm Purchase</IonTitle>
                         <IonButtons slot="end">
                             <IonButton onClick={onClose} className="text-gray-500">
                                 <IonIcon icon={closeOutline} />
@@ -191,19 +193,34 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, on
                             </div>
 
                             {/* Unit (3 cols) */}
-                            <div className="col-span-3 bg-gray-50 rounded-xl px-2 py-1.5 flex flex-col justify-center focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                            <div className="col-span-3 bg-gray-50 rounded-xl px-2 py-1.5 flex flex-col justify-center focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/20 transition-all relative">
                                 <label className="text-[9px] uppercase font-bold text-gray-400 tracking-wider mb-0.5 text-center block">Unit</label>
-                                <IonInput
-                                    value={unit}
-                                    placeholder="Pcs"
-                                    onIonChange={e => setUnit(e.detail.value!)}
-                                    className="text-center font-bold text-sm -mt-0.5 text-text-main"
-                                />
+                                <div className="relative">
+                                    <input
+                                        value={unit}
+                                        placeholder="Unit"
+                                        onChange={e => setUnit(e.target.value)}
+                                        className="w-full text-center font-bold text-sm bg-transparent border-none focus:outline-none text-text-main placeholder-gray-300"
+                                        list="unit-options"
+                                    />
+                                    <datalist id="unit-options">
+                                        <option value="Pcs" />
+                                        <option value="Kg" />
+                                        <option value="Gr" />
+                                        <option value="L" />
+                                        <option value="Ml" />
+                                        <option value="Pack" />
+                                        <option value="Box" />
+                                        <option value="Ikat" />
+                                        <option value="Kaleng" />
+                                        <option value="Botol" />
+                                    </datalist>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Category Selection (Searchable) */}
+                    {/* Category Selection (Searchable & Editable) */}
                     <div className="mt-3" style={{ animationDelay: '0.2s' }}>
                         <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Category (Optional)</label>
                         <div className="relative">
@@ -219,7 +236,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, on
                                 className="w-full bg-gray-50 text-text-main font-medium rounded-xl px-3 py-1.5 text-xs --padding-start: 12px"
                             />
 
-                            {isDropdownOpen && filteredCategories.length > 0 && (
+                            {isDropdownOpen && (filteredCategories.length > 0 || searchTerm) && (
                                 <div
                                     className="absolute left-0 right-0 mt-2 !bg-white rounded-xl shadow-2xl border border-gray-200 max-h-60 overflow-y-auto z-[9999] opacity-100"
                                     style={{
@@ -241,6 +258,18 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, on
                                             {cat}
                                         </div>
                                     ))}
+                                    {searchTerm && !filteredCategories.includes(searchTerm) && (
+                                        <div
+                                            onClick={() => {
+                                                setCategory(searchTerm);
+                                                setIsDropdownOpen(false);
+                                            }}
+                                            className="px-4 py-3 text-sm text-blue-600 hover:bg-blue-50 cursor-pointer font-bold"
+                                            style={{ backgroundColor: '#ffffff' }}
+                                        >
+                                            + Add "{searchTerm}"
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>

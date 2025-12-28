@@ -1,0 +1,730 @@
+{
+  "lists": [
+    {
+      "id": "list_bulanan_dec",
+      "created_at": "2025-12-01T08:00:00.000Z",
+      "name": "Belanja Bulanan Desember",
+      "household_id": "guest_household",
+      "created_by": "guest"
+    },
+    {
+      "id": "list_mingguan_4",
+      "created_at": "2025-12-22T09:00:00.000Z",
+      "name": "Stok Mingguan (Akhir Tahun)",
+      "household_id": "guest_household",
+      "created_by": "guest"
+    },
+    {
+      "id": "list_bbq_party",
+      "created_at": "2025-12-25T14:00:00.000Z",
+      "name": "Persiapan BBQ Tahun Baru",
+      "household_id": "guest_household",
+      "created_by": "guest"
+    },
+    {
+      "id": "list_anak",
+      "created_at": "2025-12-26T10:00:00.000Z",
+      "name": "Kebutuhan Anak & Sekolah",
+      "household_id": "guest_household",
+      "created_by": "guest"
+    },
+    {
+      "id": "list_darurat",
+      "created_at": "2025-12-27T18:00:00.000Z",
+      "name": "Warung / Darurat",
+      "household_id": "guest_household",
+      "created_by": "guest"
+    }
+  ],
+  "items": [
+    {
+      "id": "item_beras_5kg",
+      "created_at": "2025-12-01T08:05:00.000Z",
+      "is_purchased": true,
+      "item_name": "Beras Premium",
+      "quantity": 1,
+      "unit": "karung (5kg)",
+      "list_id": "list_bulanan_dec",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_minyak_2l",
+      "created_at": "2025-12-01T08:06:00.000Z",
+      "is_purchased": true,
+      "item_name": "Minyak Goreng",
+      "quantity": 2,
+      "unit": "liter",
+      "list_id": "list_bulanan_dec",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_gula",
+      "created_at": "2025-12-01T08:07:00.000Z",
+      "is_purchased": true,
+      "item_name": "Gula Pasir",
+      "quantity": 2,
+      "unit": "kg",
+      "list_id": "list_bulanan_dec",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_telur_tray",
+      "created_at": "2025-12-22T09:05:00.000Z",
+      "is_purchased": false,
+      "item_name": "Telur Ayam",
+      "quantity": 1,
+      "unit": "tray",
+      "list_id": "list_mingguan_4",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_susu_uht",
+      "created_at": "2025-12-22T09:06:00.000Z",
+      "is_purchased": false,
+      "item_name": "Susu UHT Full Cream",
+      "quantity": 6,
+      "unit": "kotak",
+      "list_id": "list_mingguan_4",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_roti_tawar",
+      "created_at": "2025-12-22T09:07:00.000Z",
+      "is_purchased": true,
+      "item_name": "Roti Tawar Kupas",
+      "quantity": 1,
+      "unit": "bungkus",
+      "list_id": "list_mingguan_4",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_daging_sapi",
+      "created_at": "2025-12-25T14:05:00.000Z",
+      "is_purchased": false,
+      "item_name": "Daging Sapi Slice",
+      "quantity": 1,
+      "unit": "kg",
+      "list_id": "list_bbq_party",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_sosis",
+      "created_at": "2025-12-25T14:06:00.000Z",
+      "is_purchased": false,
+      "item_name": "Sosis Bratwurst",
+      "quantity": 2,
+      "unit": "pack",
+      "list_id": "list_bbq_party",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_jagung",
+      "created_at": "2025-12-25T14:07:00.000Z",
+      "is_purchased": false,
+      "item_name": "Jagung Manis",
+      "quantity": 5,
+      "unit": "pcs",
+      "list_id": "list_bbq_party",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_arang",
+      "created_at": "2025-12-25T14:08:00.000Z",
+      "is_purchased": true,
+      "item_name": "Arang Batok",
+      "quantity": 2,
+      "unit": "bungkus",
+      "list_id": "list_bbq_party",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_popok",
+      "created_at": "2025-12-26T10:05:00.000Z",
+      "is_purchased": false,
+      "item_name": "Popok Bayi XL",
+      "quantity": 1,
+      "unit": "ball",
+      "list_id": "list_anak",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_tisu_basah",
+      "created_at": "2025-12-26T10:06:00.000Z",
+      "is_purchased": true,
+      "item_name": "Tisu Basah",
+      "quantity": 2,
+      "unit": "pack",
+      "list_id": "list_anak",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_galon",
+      "created_at": "2025-12-27T18:05:00.000Z",
+      "is_purchased": false,
+      "item_name": "Air Galon Aqua",
+      "quantity": 2,
+      "unit": "galon",
+      "list_id": "list_darurat",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_gas",
+      "created_at": "2025-12-27T18:06:00.000Z",
+      "is_purchased": false,
+      "item_name": "Gas Elpiji 3kg",
+      "quantity": 1,
+      "unit": "tabung",
+      "list_id": "list_darurat",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_kecap",
+      "created_at": "2025-12-01T08:10:00.000Z",
+      "is_purchased": true,
+      "item_name": "Kecap Manis",
+      "quantity": 1,
+      "unit": "botol",
+      "list_id": "list_bulanan_dec",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_saos",
+      "created_at": "2025-12-01T08:11:00.000Z",
+      "is_purchased": true,
+      "item_name": "Saos Sambal",
+      "quantity": 1,
+      "unit": "botol",
+      "list_id": "list_bulanan_dec",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_sabun_cuci",
+      "created_at": "2025-12-01T08:12:00.000Z",
+      "is_purchased": true,
+      "item_name": "Sabun Cuci Piring",
+      "quantity": 2,
+      "unit": "pouch",
+      "list_id": "list_bulanan_dec",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_deterjen",
+      "created_at": "2025-12-01T08:13:00.000Z",
+      "is_purchased": true,
+      "item_name": "Deterjen Cair",
+      "quantity": 1,
+      "unit": "jerigen",
+      "list_id": "list_bulanan_dec",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_pewangi",
+      "created_at": "2025-12-01T08:14:00.000Z",
+      "is_purchased": true,
+      "item_name": "Pewangi Pakaian",
+      "quantity": 2,
+      "unit": "pouch",
+      "list_id": "list_bulanan_dec",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_pasta_gigi",
+      "created_at": "2025-12-01T08:15:00.000Z",
+      "is_purchased": true,
+      "item_name": "Pasta Gigi",
+      "quantity": 3,
+      "unit": "tube",
+      "list_id": "list_bulanan_dec",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_sikat_gigi",
+      "created_at": "2025-12-01T08:16:00.000Z",
+      "is_purchased": true,
+      "item_name": "Sikat Gigi",
+      "quantity": 4,
+      "unit": "pcs",
+      "list_id": "list_bulanan_dec",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_shampoo",
+      "created_at": "2025-12-01T08:17:00.000Z",
+      "is_purchased": true,
+      "item_name": "Shampoo",
+      "quantity": 1,
+      "unit": "botol",
+      "list_id": "list_bulanan_dec",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_sabun_mandi",
+      "created_at": "2025-12-01T08:18:00.000Z",
+      "is_purchased": true,
+      "item_name": "Sabun Mandi Cair",
+      "quantity": 2,
+      "unit": "pouch",
+      "list_id": "list_bulanan_dec",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_mie_instan",
+      "created_at": "2025-12-22T09:10:00.000Z",
+      "is_purchased": false,
+      "item_name": "Mie Instan Goreng",
+      "quantity": 10,
+      "unit": "bungkus",
+      "list_id": "list_mingguan_4",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_kopi",
+      "created_at": "2025-12-22T09:11:00.000Z",
+      "is_purchased": false,
+      "item_name": "Kopi Bubuk",
+      "quantity": 1,
+      "unit": "pack",
+      "list_id": "list_mingguan_4",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_teh",
+      "created_at": "2025-12-22T09:12:00.000Z",
+      "is_purchased": false,
+      "item_name": "Teh Celup",
+      "quantity": 1,
+      "unit": "kotak",
+      "list_id": "list_mingguan_4",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_bawang_merah",
+      "created_at": "2025-12-22T09:13:00.000Z",
+      "is_purchased": false,
+      "item_name": "Bawang Merah",
+      "quantity": 500,
+      "unit": "gram",
+      "list_id": "list_mingguan_4",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_bawang_putih",
+      "created_at": "2025-12-22T09:14:00.000Z",
+      "is_purchased": false,
+      "item_name": "Bawang Putih",
+      "quantity": 250,
+      "unit": "gram",
+      "list_id": "list_mingguan_4",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_cabe",
+      "created_at": "2025-12-22T09:15:00.000Z",
+      "is_purchased": false,
+      "item_name": "Cabe Merah",
+      "quantity": 250,
+      "unit": "gram",
+      "list_id": "list_mingguan_4",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_ayam",
+      "created_at": "2025-12-25T14:10:00.000Z",
+      "is_purchased": false,
+      "item_name": "Ayam Potong",
+      "quantity": 2,
+      "unit": "ekor",
+      "list_id": "list_bbq_party",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_ikan",
+      "created_at": "2025-12-25T14:11:00.000Z",
+      "is_purchased": false,
+      "item_name": "Ikan Gurame",
+      "quantity": 2,
+      "unit": "kg",
+      "list_id": "list_bbq_party",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_bumbu_bbq",
+      "created_at": "2025-12-25T14:12:00.000Z",
+      "is_purchased": true,
+      "item_name": "Saus BBQ",
+      "quantity": 2,
+      "unit": "botol",
+      "list_id": "list_bbq_party",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_mentega",
+      "created_at": "2025-12-25T14:13:00.000Z",
+      "is_purchased": true,
+      "item_name": "Mentega",
+      "quantity": 2,
+      "unit": "sachet",
+      "list_id": "list_bbq_party",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_susu_formula",
+      "created_at": "2025-12-26T10:10:00.000Z",
+      "is_purchased": false,
+      "item_name": "Susu Formula",
+      "quantity": 2,
+      "unit": "kaleng",
+      "list_id": "list_anak",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_minyak_telon",
+      "created_at": "2025-12-26T10:11:00.000Z",
+      "is_purchased": true,
+      "item_name": "Minyak Telon",
+      "quantity": 1,
+      "unit": "botol",
+      "list_id": "list_anak",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_bedak",
+      "created_at": "2025-12-26T10:12:00.000Z",
+      "is_purchased": true,
+      "item_name": "Bedak Bayi",
+      "quantity": 1,
+      "unit": "botol",
+      "list_id": "list_anak",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_buku_tulis",
+      "created_at": "2025-12-26T10:13:00.000Z",
+      "is_purchased": false,
+      "item_name": "Buku Tulis",
+      "quantity": 1,
+      "unit": "pack",
+      "list_id": "list_anak",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_pensil",
+      "created_at": "2025-12-26T10:14:00.000Z",
+      "is_purchased": false,
+      "item_name": "Pensil 2B",
+      "quantity": 1,
+      "unit": "pack",
+      "list_id": "list_anak",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_penghapus",
+      "created_at": "2025-12-26T10:15:00.000Z",
+      "is_purchased": false,
+      "item_name": "Penghapus",
+      "quantity": 2,
+      "unit": "pcs",
+      "list_id": "list_anak",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_rokok",
+      "created_at": "2025-12-27T18:10:00.000Z",
+      "is_purchased": false,
+      "item_name": "Rokok",
+      "quantity": 1,
+      "unit": "bungkus",
+      "list_id": "list_darurat",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_korek",
+      "created_at": "2025-12-27T18:11:00.000Z",
+      "is_purchased": true,
+      "item_name": "Korek Api",
+      "quantity": 1,
+      "unit": "pcs",
+      "list_id": "list_darurat",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_lilin",
+      "created_at": "2025-12-27T18:12:00.000Z",
+      "is_purchased": false,
+      "item_name": "Lilin",
+      "quantity": 1,
+      "unit": "pack",
+      "list_id": "list_darurat",
+      "household_id": "guest_household"
+    },
+    {
+      "id": "item_obat_nyamuk",
+      "created_at": "2025-12-27T18:13:00.000Z",
+      "is_purchased": true,
+      "item_name": "Obat Nyamuk Bakar",
+      "quantity": 1,
+      "unit": "kotak",
+      "list_id": "list_darurat",
+      "household_id": "guest_household"
+    }
+  ],
+  "history": [
+    {
+      "id": "hist_telur_aug",
+      "household_id": "guest_household",
+      "item_name": "Telur Ayam",
+      "final_price": 24000,
+      "total_size": 1,
+      "base_unit": "kg",
+      "category": "Bahan Pokok",
+      "list_name": "Belanja Agustus",
+      "store_name": "Pasar Tradisional",
+      "purchased_at": "2025-08-15T09:00:00.000Z"
+    },
+    {
+      "id": "hist_telur_sep",
+      "household_id": "guest_household",
+      "item_name": "Telur Ayam",
+      "final_price": 25500,
+      "total_size": 1,
+      "base_unit": "kg",
+      "category": "Bahan Pokok",
+      "list_name": "Belanja September",
+      "store_name": "Agen Telur",
+      "purchased_at": "2025-09-15T09:00:00.000Z"
+    },
+    {
+      "id": "hist_telur_oct",
+      "household_id": "guest_household",
+      "item_name": "Telur Ayam",
+      "final_price": 26500,
+      "total_size": 1,
+      "base_unit": "kg",
+      "category": "Bahan Pokok",
+      "list_name": "Belanja Oktober",
+      "store_name": "Superindo",
+      "purchased_at": "2025-10-15T09:00:00.000Z"
+    },
+    {
+      "id": "hist_telur_nov",
+      "household_id": "guest_household",
+      "item_name": "Telur Ayam",
+      "final_price": 28000,
+      "total_size": 1,
+      "base_unit": "kg",
+      "category": "Bahan Pokok",
+      "list_name": "Belanja November",
+      "store_name": "Indomaret",
+      "purchased_at": "2025-11-15T09:00:00.000Z"
+    },
+    {
+      "id": "hist_telur_dec",
+      "household_id": "guest_household",
+      "item_name": "Telur Ayam",
+      "final_price": 29500,
+      "total_size": 1,
+      "base_unit": "kg",
+      "category": "Bahan Pokok",
+      "list_name": "Belanja Desember",
+      "store_name": "Warung Tetangga",
+      "purchased_at": "2025-12-15T09:00:00.000Z"
+    },
+    {
+      "id": "hist_1",
+      "household_id": "guest_household",
+      "item_name": "Beras Premium",
+      "final_price": 72000,
+      "total_size": 5,
+      "base_unit": "kg",
+      "category": "Bahan Pokok",
+      "list_name": "Belanja Bulanan Desember",
+      "store_name": "Superindo",
+      "purchased_at": "2025-12-01T10:00:00.000Z"
+    },
+    {
+      "id": "hist_2",
+      "household_id": "guest_household",
+      "item_name": "Minyak Goreng",
+      "final_price": 38000,
+      "total_size": 2,
+      "base_unit": "liter",
+      "category": "Bahan Pokok",
+      "list_name": "Belanja Bulanan Desember",
+      "store_name": "Superindo",
+      "purchased_at": "2025-12-01T10:05:00.000Z"
+    },
+    {
+      "id": "hist_3",
+      "household_id": "guest_household",
+      "item_name": "Gula Pasir",
+      "final_price": 32000,
+      "total_size": 2,
+      "base_unit": "kg",
+      "category": "Bahan Pokok",
+      "list_name": "Belanja Bulanan Desember",
+      "store_name": "Superindo",
+      "purchased_at": "2025-12-01T10:06:00.000Z"
+    },
+    {
+      "id": "hist_4",
+      "household_id": "guest_household",
+      "item_name": "Roti Tawar Kupas",
+      "final_price": 18500,
+      "total_size": 1,
+      "base_unit": "bungkus",
+      "category": "Makanan",
+      "list_name": "Stok Mingguan (Akhir Tahun)",
+      "store_name": "Indomaret",
+      "purchased_at": "2025-12-22T17:30:00.000Z"
+    },
+    {
+      "id": "hist_5",
+      "household_id": "guest_household",
+      "item_name": "Arang Batok",
+      "final_price": 15000,
+      "total_size": 2,
+      "base_unit": "bungkus",
+      "category": "Perlengkapan",
+      "list_name": "Persiapan BBQ Tahun Baru",
+      "store_name": "Pasar Tradisional",
+      "purchased_at": "2025-12-26T08:00:00.000Z"
+    },
+    {
+      "id": "hist_6",
+      "household_id": "guest_household",
+      "item_name": "Tisu Basah",
+      "final_price": 25000,
+      "total_size": 2,
+      "base_unit": "pack",
+      "category": "Kebutuhan Anak",
+      "list_name": "Kebutuhan Anak & Sekolah",
+      "store_name": "Alfamart",
+      "purchased_at": "2025-12-26T11:00:00.000Z"
+    },
+    {
+      "id": "hist_7",
+      "household_id": "guest_household",
+      "item_name": "Kopi Kapal Api",
+      "final_price": 12000,
+      "total_size": 1,
+      "base_unit": "pack",
+      "category": "Minuman",
+      "list_name": "Warung / Darurat",
+      "store_name": "Warung Madura",
+      "purchased_at": "2025-12-27T19:00:00.000Z"
+    },
+    {
+      "id": "hist_8",
+      "household_id": "guest_household",
+      "item_name": "Indomie Goreng",
+      "final_price": 15000,
+      "total_size": 5,
+      "base_unit": "pcs",
+      "category": "Makanan Instan",
+      "list_name": "Stok Mingguan",
+      "store_name": "Indomaret",
+      "purchased_at": "2025-12-20T18:00:00.000Z"
+    },
+    {
+      "id": "hist_9",
+      "household_id": "guest_household",
+      "item_name": "Sabun Mandi Cair",
+      "final_price": 28000,
+      "total_size": 450,
+      "base_unit": "ml",
+      "category": "Kebersihan Diri",
+      "list_name": "Belanja Bulanan",
+      "store_name": "Guardian",
+      "purchased_at": "2025-12-15T14:00:00.000Z"
+    },
+    {
+      "id": "hist_10",
+      "household_id": "guest_household",
+      "item_name": "Shampoo Anti Ketombe",
+      "final_price": 35000,
+      "total_size": 340,
+      "base_unit": "ml",
+      "category": "Kebersihan Diri",
+      "list_name": "Belanja Bulanan",
+      "store_name": "Guardian",
+      "purchased_at": "2025-12-15T14:05:00.000Z"
+    },
+    {
+      "id": "hist_11",
+      "household_id": "guest_household",
+      "item_name": "Daging Sapi Slice",
+      "final_price": 120000,
+      "total_size": 1,
+      "base_unit": "kg",
+      "category": "Daging",
+      "list_name": "Belanja Bulanan",
+      "store_name": "Meat Shop",
+      "purchased_at": "2025-11-20T10:00:00.000Z"
+    },
+    {
+      "id": "hist_12",
+      "household_id": "guest_household",
+      "item_name": "Daging Sapi Slice",
+      "final_price": 115000,
+      "total_size": 1,
+      "base_unit": "kg",
+      "category": "Daging",
+      "list_name": "Belanja Bulanan",
+      "store_name": "Meat Shop",
+      "purchased_at": "2025-10-20T10:00:00.000Z"
+    },
+    {
+      "id": "hist_13",
+      "household_id": "guest_household",
+      "item_name": "Popok Bayi XL",
+      "final_price": 85000,
+      "total_size": 1,
+      "base_unit": "ball",
+      "category": "Kebutuhan Anak",
+      "list_name": "Belanja Bulanan",
+      "store_name": "Superindo",
+      "purchased_at": "2025-11-05T16:00:00.000Z"
+    },
+    {
+      "id": "hist_14",
+      "household_id": "guest_household",
+      "item_name": "Popok Bayi XL",
+      "final_price": 82000,
+      "total_size": 1,
+      "base_unit": "ball",
+      "category": "Kebutuhan Anak",
+      "list_name": "Belanja Bulanan",
+      "store_name": "Superindo",
+      "purchased_at": "2025-10-05T16:00:00.000Z"
+    },
+    {
+      "id": "hist_15",
+      "household_id": "guest_household",
+      "item_name": "Gas Elpiji 3kg",
+      "final_price": 22000,
+      "total_size": 1,
+      "base_unit": "tabung",
+      "category": "Bahan Bakar",
+      "list_name": "Warung",
+      "store_name": "Warung Madura",
+      "purchased_at": "2025-12-10T19:00:00.000Z"
+    },
+    {
+      "id": "hist_16",
+      "household_id": "guest_household",
+      "item_name": "Gas Elpiji 3kg",
+      "final_price": 21000,
+      "total_size": 1,
+      "base_unit": "tabung",
+      "category": "Bahan Bakar",
+      "list_name": "Warung",
+      "store_name": "Warung Madura",
+      "purchased_at": "2025-11-10T19:00:00.000Z"
+    }
+  ],
+  "user_profile": {
+    "name": "User Test"
+  },
+  "version": 1,
+  "timestamp": "2025-12-28T00:00:00.000Z"
+}

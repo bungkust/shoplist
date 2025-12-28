@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButtons, IonBackButton, IonIcon, IonSpinner } from '@ionic/react';
 import { useParams } from 'react-router-dom';
-import { walletOutline, timeOutline } from 'ionicons/icons';
+import { walletOutline, timeOutline, storefrontOutline } from 'ionicons/icons';
 import { supabase } from '../services/supabaseClient';
 import { localItemService } from '../services/localService';
 import { ENABLE_CLOUD_SYNC } from '../config';
@@ -184,6 +184,12 @@ const ItemDetail: React.FC = () => {
                                             </div>
                                             <div>
                                                 <p className="font-bold text-gray-800 text-base">{h.list_name || 'Unknown List'}</p>
+                                                {h.store_name && (
+                                                    <div className="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
+                                                        <IonIcon icon={storefrontOutline} className="text-[10px]" />
+                                                        {h.store_name}
+                                                    </div>
+                                                )}
                                                 <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
                                                     <IonIcon icon={timeOutline} className="text-[10px]" />
                                                     {new Date(h.purchased_at).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}

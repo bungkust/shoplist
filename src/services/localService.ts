@@ -65,28 +65,36 @@ export const localListService: ListService = {
     }
 };
 
+
+
 export const localStoreService = {
     async getStores(_householdId: string): Promise<string[]> {
+        // 1. Get Local Stores
         const rawStores = localStorage.getItem(STORAGE_KEYS.STORES);
-        const stores: string[] = rawStores ? JSON.parse(rawStores) : [];
+        let stores: string[] = rawStores ? JSON.parse(rawStores) : [];
 
+        // 2. Get Local History for sorting
         const rawHistory = localStorage.getItem(STORAGE_KEYS.HISTORY);
-        const history: TransactionHistory[] = rawHistory ? JSON.parse(rawHistory) : [];
+        const localHistory: TransactionHistory[] = rawHistory ? JSON.parse(rawHistory) : [];
 
-        // Create a map of store -> last purchased date
         const lastUsedMap = new Map<string, number>();
 
-        history.forEach(h => {
+        // Process Local History
+        localHistory.forEach(h => {
             if (h.store_name) {
                 const time = new Date(h.purchased_at).getTime();
                 const current = lastUsedMap.get(h.store_name) || 0;
                 if (time > current) {
                     lastUsedMap.set(h.store_name, time);
                 }
+                // Ensure store from history is in the list
+                if (!stores.includes(h.store_name)) {
+                    stores.push(h.store_name);
+                }
             }
         });
 
-        // Sort stores based on last used time (newest first)
+        // 3. Sort stores based on last used time (newest first)
         return stores.sort((a, b) => {
             const timeA = lastUsedMap.get(a) || 0;
             const timeB = lastUsedMap.get(b) || 0;
@@ -98,7 +106,10 @@ export const localStoreService = {
         const raw = localStorage.getItem(STORAGE_KEYS.STORES);
         const stores: string[] = raw ? JSON.parse(raw) : [];
 
-        if (!stores.includes(name)) {
+        // Case-insensitive check
+        const exists = stores.some(s => s.toLowerCase() === name.toLowerCase());
+
+        if (!exists) {
             stores.push(name);
             stores.sort();
             localStorage.setItem(STORAGE_KEYS.STORES, JSON.stringify(stores));

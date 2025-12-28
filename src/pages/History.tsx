@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonIcon, IonToast, IonActionSheet, useIonViewDidEnter, IonRefresher, IonRefresherContent } from '@ionic/react';
+import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonIcon, IonToast, useIonViewDidEnter, IonRefresher, IonRefresherContent } from '@ionic/react';
 import type { RefresherEventDetail } from '@ionic/react';
-import { refreshOutline, timeOutline, searchOutline, closeCircle } from 'ionicons/icons';
+import { refreshOutline, timeOutline, searchOutline, closeCircle, filterOutline } from 'ionicons/icons';
+import CategoryFilterModal from '../components/CategoryFilterModal';
+import ListSelectionModal from '../components/ListSelectionModal';
 import { supabase } from '../services/supabaseClient';
 import type { TransactionHistory, ListMaster } from '../types/supabase';
 import { ENABLE_CLOUD_SYNC } from '../config';
@@ -21,7 +23,8 @@ const History: React.FC = () => {
 
   // Search & Filter
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string | 'all'>('all');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
   // Detail Modal
   // const [selectedHistoryItem, setSelectedHistoryItem] = useState<{ name: string, history: TransactionHistory[] } | null>(null);
@@ -202,11 +205,12 @@ const History: React.FC = () => {
   // Filter Logic
   const filteredHistory = historyData.filter(t => {
     const matchesSearch = t.item_name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || t.category === selectedCategory;
+    const itemCategory = t.category || 'Lainnya';
+    const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(itemCategory);
     return matchesSearch && matchesCategory;
   });
 
-  const categories = ['all', ...Array.from(new Set(historyData.map(t => t.category || 'Lainnya')))];
+  const categories = Array.from(new Set(historyData.map(t => t.category || 'Lainnya'))).sort();
 
   return (
     <IonPage>
@@ -232,25 +236,47 @@ const History: React.FC = () => {
             )}
           </div>
 
-          {/* Category Chips */}
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {categories.map(cat => (
+          {/* Filter Button & Active Chips */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <button
+              onClick={() => setIsFilterModalOpen(true)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-colors whitespace-nowrap
+                ${selectedCategories.length > 0
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
+                  : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                }`}
+            >
+              <IonIcon icon={filterOutline} />
+              <span>Filter</span>
+              {selectedCategories.length > 0 && (
+                <span className="bg-white/20 px-1.5 py-0.5 rounded-md text-xs">
+                  {selectedCategories.length}
+                </span>
+              )}
+            </button>
+
+            {/* Show active filters as chips (optional, for quick remove) */}
+            {selectedCategories.map(cat => (
               <button
                 key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors
-                                    ${selectedCategory === cat
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
+                onClick={() => setSelectedCategories(prev => prev.filter(c => c !== cat))}
+                className="flex items-center gap-1 px-3 py-2 rounded-xl bg-blue-50 text-blue-700 border border-blue-100 text-sm font-medium whitespace-nowrap"
               >
-                {cat === 'all' ? 'All' : cat}
+                {cat}
+                <IonIcon icon={closeCircle} className="text-blue-400" />
               </button>
             ))}
           </div>
         </div>
       </IonHeader>
       <IonContent fullscreen className="bg-gray-50">
+        <CategoryFilterModal
+          isOpen={isFilterModalOpen}
+          onClose={() => setIsFilterModalOpen(false)}
+          categories={categories}
+          selectedCategories={selectedCategories}
+          onApply={setSelectedCategories}
+        />
         <IonRefresher slot="fixed" onIonRefresh={doRefresh}>
           <IonRefresherContent></IonRefresherContent>
         </IonRefresher>
@@ -328,27 +354,15 @@ const History: React.FC = () => {
           color="success"
         />
 
-        <IonActionSheet
+        <ListSelectionModal
           isOpen={showListSelection}
-          onDidDismiss={() => setShowListSelection(false)}
-          header="Select List to Restock"
-          buttons={[
-            ...availableLists.map(list => ({
-              text: list.name,
-              handler: () => {
-                if (selectedItemForRestock) {
-                  executeRestock(selectedItemForRestock, list.id);
-                }
-              }
-            })),
-            {
-              text: 'Cancel',
-              role: 'cancel',
-              data: {
-                action: 'cancel',
-              },
-            },
-          ]}
+          onClose={() => setShowListSelection(false)}
+          lists={availableLists}
+          onSelect={(listId) => {
+            if (selectedItemForRestock) {
+              executeRestock(selectedItemForRestock, listId);
+            }
+          }}
         />
       </IonContent>
     </IonPage>
