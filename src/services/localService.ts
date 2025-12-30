@@ -191,13 +191,32 @@ export const localItemService: ItemService = {
         await this.toggleItem(item.id, true);
     },
 
-    async getHistory(_householdId: string, page: number = 0, pageSize: number = 20): Promise<TransactionHistory[]> {
+    async getHistory(_householdId: string, page: number = 0, pageSize: number = 20, searchTerm: string = '', categories: string[] = []): Promise<TransactionHistory[]> {
         const raw = localStorage.getItem(STORAGE_KEYS.HISTORY);
         const history: TransactionHistory[] = raw ? JSON.parse(raw) : [];
-        const sorted = history.sort((a, b) => new Date(b.purchased_at).getTime() - new Date(a.purchased_at).getTime());
+
+        // Filter first
+        const filtered = history.filter(t => {
+            const matchesSearch = t.item_name.toLowerCase().includes(searchTerm.toLowerCase());
+            const itemCategory = (t.category || 'Lainnya').trim();
+
+            // Robust category matching
+            const matchesCategory = categories.length === 0 || categories.some(c => c.toLowerCase() === itemCategory.toLowerCase());
+
+            return matchesSearch && matchesCategory;
+        });
+
+        const sorted = filtered.sort((a, b) => new Date(b.purchased_at).getTime() - new Date(a.purchased_at).getTime());
 
         const start = page * pageSize;
         const end = start + pageSize;
         return sorted.slice(start, end);
+    },
+
+    async getHistoryCategories(_householdId: string): Promise<string[]> {
+        const raw = localStorage.getItem(STORAGE_KEYS.HISTORY);
+        const history: TransactionHistory[] = raw ? JSON.parse(raw) : [];
+        const categories = new Set(history.map(h => h.category || 'Lainnya'));
+        return Array.from(categories).sort();
     }
 };

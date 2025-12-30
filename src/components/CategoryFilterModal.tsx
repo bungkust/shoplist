@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonIcon, IonSearchbar, IonFooter } from '@ionic/react';
+import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonIcon, IonSearchbar, IonFooter } from '@ionic/react';
 import { closeOutline, checkmarkDoneOutline, trashOutline } from 'ionicons/icons';
 
 interface CategoryFilterModalProps {
@@ -67,7 +67,7 @@ const CategoryFilterModal: React.FC<CategoryFilterModalProps> = ({ isOpen, onClo
                     </div>
                 </IonHeader>
 
-                <IonContent className="ion-padding-horizontal">
+                <div className="flex-1 overflow-y-auto px-4">
                     <div className="space-y-1">
                         {filteredCategories.length === 0 ? (
                             <div className="text-center py-10 text-gray-500">
@@ -101,7 +101,7 @@ const CategoryFilterModal: React.FC<CategoryFilterModalProps> = ({ isOpen, onClo
                             ))
                         )}
                     </div>
-                </IonContent>
+                </div>
 
                 <IonFooter className="ion-no-border p-4 bg-white border-t border-gray-100">
                     <div className="flex gap-3">

@@ -43,5 +43,6 @@ export interface ItemService {
     toggleItem(id: string, isPurchased: boolean): Promise<void>;
     deleteItem(id: string): Promise<void>;
     moveToHistory(item: ShoppingItem, finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string, listName?: string, storeName?: string): Promise<void>;
-    getHistory(householdId: string, page?: number, pageSize?: number): Promise<TransactionHistory[]>;
+    getHistory(householdId: string, page?: number, pageSize?: number, searchTerm?: string, categories?: string[]): Promise<TransactionHistory[]>;
+    getHistoryCategories(householdId: string): Promise<string[]>;
 }

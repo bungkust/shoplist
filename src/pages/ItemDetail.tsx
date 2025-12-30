@@ -165,15 +165,35 @@ const ItemDetail: React.FC = () => {
                                                 )}
                                                 <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
                                                     <IonIcon icon={timeOutline} className="text-[10px]" />
-                                                    {new Date(h.purchased_at).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                                                    {new Date(h.purchased_at).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: '2-digit' })}
                                                 </div>
                                             </div>
                                         </div>
                                         <div className="text-right">
                                             <p className="font-bold text-gray-900 text-lg">{formatCurrency(h.final_price)}</p>
-                                            <p className="text-xs text-gray-500 font-medium bg-gray-100 px-2 py-0.5 rounded-lg inline-block mt-1">
-                                                {h.total_size} {h.base_unit}
-                                            </p>
+                                            <div className="flex flex-col items-end">
+                                                <p className="text-xs text-gray-500 font-medium mt-1">
+                                                    {h.total_size} {h.base_unit}
+                                                </p>
+                                                {h.total_size > 0 && (
+                                                    <p className="text-[10px] text-gray-400 mt-0.5">
+                                                        {(() => {
+                                                            let size = h.total_size;
+                                                            let unit = h.base_unit.toLowerCase();
+
+                                                            if (unit === 'kg') {
+                                                                size *= 1000;
+                                                                unit = 'gram';
+                                                            } else if (unit === 'l' || unit === 'liter') {
+                                                                size *= 1000;
+                                                                unit = 'ml';
+                                                            }
+
+                                                            return `${formatCurrency(h.final_price / size)} / ${unit}`;
+                                                        })()}
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 ))}

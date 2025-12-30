@@ -23,6 +23,7 @@ const History: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
 
   // Detail Modal
   // const [selectedHistoryItem, setSelectedHistoryItem] = useState<{ name: string, history: TransactionHistory[] } | null>(null);
@@ -35,6 +36,8 @@ const History: React.FC = () => {
   useEffect(() => {
     const getProfile = async () => {
       setHouseholdId('guest_household');
+      const cats = await localItemService.getHistoryCategories('guest_household');
+      setCategories(cats);
     };
     getProfile();
   }, []);
@@ -47,7 +50,7 @@ const History: React.FC = () => {
     const currentPage = reset ? 0 : page;
     setLoading(true);
 
-    const data = await localItemService.getHistory(householdId, currentPage, PAGE_SIZE);
+    const data = await localItemService.getHistory(householdId, currentPage, PAGE_SIZE, searchTerm, selectedCategories);
     if (reset) {
       setHistory(data);
     } else {
@@ -87,7 +90,7 @@ const History: React.FC = () => {
       setPage(0);
       fetchHistory(true);
     }
-  }, [householdId]);
+  }, [householdId, searchTerm, selectedCategories]);
 
   const handleRestockClick = async (e: React.MouseEvent, item: TransactionHistory) => {
     e.stopPropagation(); // Prevent opening detail modal
@@ -137,15 +140,7 @@ const History: React.FC = () => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
   };
 
-  // Filter Logic
-  const filteredHistory = historyData.filter(t => {
-    const matchesSearch = t.item_name.toLowerCase().includes(searchTerm.toLowerCase());
-    const itemCategory = t.category || 'Lainnya';
-    const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(itemCategory);
-    return matchesSearch && matchesCategory;
-  });
 
-  const categories = Array.from(new Set(historyData.map(t => t.category || 'Lainnya'))).sort();
 
   return (
     <IonPage>
@@ -218,14 +213,14 @@ const History: React.FC = () => {
         <div className="p-4 space-y-6 pb-20">
           {loading && historyData.length === 0 ? (
             <p className="text-center text-gray-400 mt-10">Loading history...</p>
-          ) : filteredHistory.length === 0 ? (
+          ) : historyData.length === 0 ? (
             <div className="text-center mt-20 opacity-60">
               <IonIcon icon={timeOutline} className="text-6xl text-gray-300" />
               <p className="text-gray-400 mt-2">No transactions found.</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredHistory.map((item) => (
+              {historyData.map((item) => (
                 <div
                   key={item.id}
                   onClick={() => openItemDetail(item.item_name)}

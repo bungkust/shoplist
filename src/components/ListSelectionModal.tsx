@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonIcon, IonSearchbar } from '@ionic/react';
+import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonIcon, IonSearchbar } from '@ionic/react';
 import { closeOutline, chevronForwardOutline, cartOutline } from 'ionicons/icons';
 import type { ListMaster } from '../services/types';
 
@@ -51,7 +51,7 @@ const ListSelectionModal: React.FC<ListSelectionModalProps> = ({ isOpen, onClose
                     </div>
                 </IonHeader>
 
-                <IonContent className="ion-padding-horizontal">
+                <div className="flex-1 overflow-y-auto px-4">
                     <div className="space-y-2 pb-4">
                         {filteredLists.length === 0 ? (
                             <div className="text-center py-10 text-gray-500">
@@ -77,7 +77,7 @@ const ListSelectionModal: React.FC<ListSelectionModalProps> = ({ isOpen, onClose
                             ))
                         )}
                     </div>
-                </IonContent>
+                </div>
             </div>
         </IonModal>
     );
