@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonIcon, IonSearchbar } from '@ionic/react';
 import { closeOutline, chevronForwardOutline, cartOutline } from 'ionicons/icons';
-import type { ListMaster } from '../types/supabase';
+import type { ListMaster } from '../services/types';
 
 interface ListSelectionModalProps {
     isOpen: boolean;

@@ -1,4 +1,4 @@
-import type { TransactionHistory } from '../types/supabase';
+import type { TransactionHistory } from '../services/types';
 
 export interface CategoryStat {
     category: string;

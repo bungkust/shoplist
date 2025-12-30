@@ -313,8 +313,8 @@ const Compare: React.FC = () => {
                             '--max-width': '400px',
                             '--background': 'transparent',
                             '--box-shadow': 'none',
-                            'align-items': 'center',
-                            'justify-content': 'center'
+                            alignItems: 'center',
+                            justifyContent: 'center'
                         }}
                     >
                         <div className={`

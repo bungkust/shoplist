@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { IonContent, IonPage, IonInput, IonButton, IonToast, IonIcon } from '@ionic/react';
 import { logInOutline } from 'ionicons/icons';
-import { supabase } from '../services/supabaseClient';
 import { useHistory } from 'react-router-dom';
 
 const Login: React.FC = () => {
@@ -15,17 +14,23 @@ const Login: React.FC = () => {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        setLoading(false);
+        // Simulate API call
+        setTimeout(() => {
+            // In a real local-first app, we might check password against a stored hash,
+            // but for this "Guest/Local" mode, we just allow access.
+            // Ensure user profile exists or create a default one
+            if (!localStorage.getItem('user_profile')) {
+                localStorage.setItem('user_profile', JSON.stringify({
+                    id: 'guest_user',
+                    name: 'Guest',
+                    email: email || 'guest@local'
+                }));
+            }
 
-        if (!error) {
+            localStorage.setItem('app_initialized', 'true');
+            setLoading(false);
             history.push('/home');
-        }
-
-        if (error) {
-            setToastMessage(error.message);
-            setShowToast(true);
-        }
+        }, 1000);
     };
 
     return (

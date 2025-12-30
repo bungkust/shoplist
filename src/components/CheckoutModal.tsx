@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonInput, IonIcon } from '@ionic/react';
 import { closeOutline, checkmarkCircleOutline, alertCircleOutline, pricetagOutline, cubeOutline, storefrontOutline, searchOutline } from 'ionicons/icons';
-import { supabase } from '../services/supabaseClient';
-import { localStoreService } from '../services/localService';
-import type { ShoppingItem } from '../types/supabase';
+import { localStoreService, localItemService } from '../services/localService';
+import type { ShoppingItem } from '../services/types';
 import { modalEnterAnimation, modalLeaveAnimation } from '../utils/animations';
 import { detectCategory } from '../utils/categoryHelper';
 
@@ -89,17 +88,11 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, ho
 
     const fetchLastPrice = async (itemName: string, itemUnit: string) => {
         // Simple logic: Find last purchase with same unit (MVP)
-        const { data } = await supabase
-            .from('transaction_history')
-            .select('final_price, total_size')
-            .eq('item_name', itemName)
-            .eq('base_unit', itemUnit)
-            .order('purchased_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
+        const history = await localItemService.getHistory(householdId || 'guest_household', 0, 100); // Fetch recent history
+        const lastPurchase = history.find(h => h.item_name === itemName && h.base_unit === itemUnit);
 
-        if (data) {
-            const unitPrice = data.final_price / data.total_size;
+        if (lastPurchase) {
+            const unitPrice = lastPurchase.final_price / lastPurchase.total_size;
             setLastPrice(unitPrice);
         }
     };

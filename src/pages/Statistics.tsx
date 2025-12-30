@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonLabel, IonIcon, IonSegment, IonSegmentButton } from '@ionic/react';
 import { pieChartOutline, walletOutline, trendingUpOutline } from 'ionicons/icons';
-import { supabase } from '../services/supabaseClient';
 import { STORAGE_KEYS } from '../services/localService';
-import { ENABLE_CLOUD_SYNC } from '../config';
-import type { TransactionHistory } from '../types/supabase';
+import type { TransactionHistory } from '../services/types';
 import { calculateTotalSpending, groupSpendingByCategory } from '../utils/statisticsHelper';
 import type { CategoryStat } from '../utils/statisticsHelper';
 
@@ -21,16 +19,8 @@ const Statistics: React.FC = () => {
     const loadData = async () => {
         let data: TransactionHistory[] = [];
 
-        if (ENABLE_CLOUD_SYNC) {
-            const { data: cloudData } = await supabase
-                .from('transaction_history')
-                .select('*')
-                .order('purchased_at', { ascending: false });
-            data = cloudData || [];
-        } else {
-            const localData = localStorage.getItem(STORAGE_KEYS.HISTORY);
-            data = localData ? JSON.parse(localData) : [];
-        }
+        const localData = localStorage.getItem(STORAGE_KEYS.HISTORY);
+        data = localData ? JSON.parse(localData) : [];
 
         // Filter Data
         if (filter === 'month') {

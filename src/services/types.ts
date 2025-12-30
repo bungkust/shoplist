@@ -1,4 +1,34 @@
-import type { ListMaster, ShoppingItem, TransactionHistory } from '../types/supabase';
+export interface ListMaster {
+    id: string;
+    created_at: string;
+    name: string;
+    household_id: string;
+    created_by: string;
+}
+
+export interface ShoppingItem {
+    id: string;
+    created_at: string;
+    is_purchased: boolean;
+    household_id: string;
+    list_id: string;
+    item_name: string;
+    quantity: number;
+    unit: string;
+}
+
+export interface TransactionHistory {
+    id: string;
+    household_id: string;
+    item_name: string;
+    final_price: number;
+    total_size: number;
+    base_unit: string;
+    category?: string;
+    list_name?: string;
+    store_name?: string;
+    purchased_at: string;
+}
 
 export interface ListService {
     getLists(householdId: string, page?: number, pageSize?: number): Promise<ListMaster[]>;

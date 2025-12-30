@@ -10,11 +10,8 @@ import ModernItemCard from '../components/ui/ModernItemCard';
 import VoiceModal from '../components/VoiceModal';
 import CheckoutModal from '../components/CheckoutModal';
 import SmartInputBar from '../components/SmartInputBar';
-import { supabase } from '../services/supabaseClient';
 import { localListService } from '../services/localService';
-import type { ShoppingItem } from '../types/supabase';
-
-import { ENABLE_CLOUD_SYNC } from '../config';
+import type { ShoppingItem } from '../services/types';
 
 const ShoppingListDetail: React.FC = () => {
     const { id: listId } = useParams<{ id: string }>();
@@ -64,33 +61,11 @@ const ShoppingListDetail: React.FC = () => {
     // Fetch Household ID and List Name
     useEffect(() => {
         const getProfileAndList = async () => {
-            if (!ENABLE_CLOUD_SYNC) {
-                setHouseholdId('guest_household');
-                if (listId) {
-                    const lists = await localListService.getLists('guest_household');
-                    const list = lists.find(l => l.id === listId);
-                    if (list) setListName(list.name);
-                }
-                return;
-            }
-
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                const { data } = await supabase
-                    .from('profiles')
-                    .select('household_id')
-                    .eq('id', user.id)
-                    .single();
-                if (data) setHouseholdId(data.household_id);
-            }
-
+            setHouseholdId('guest_household');
             if (listId) {
-                const { data: listData } = await supabase
-                    .from('list_master')
-                    .select('name')
-                    .eq('id', listId)
-                    .single();
-                if (listData) setListName(listData.name);
+                const lists = await localListService.getLists('guest_household');
+                const list = lists.find(l => l.id === listId);
+                if (list) setListName(list.name);
             }
         };
         getProfileAndList();

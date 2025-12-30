@@ -2,11 +2,8 @@ import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonFab, IonFabBut
 import { addOutline, listOutline, ellipsisVertical, trashOutline, createOutline } from 'ionicons/icons';
 import { useState, useEffect, useRef } from 'react';
 import { useHistory } from 'react-router-dom';
-import { supabase } from '../services/supabaseClient';
 import { useLists } from '../hooks/useLists';
-import type { ListMaster } from '../types/supabase';
-
-import { ENABLE_CLOUD_SYNC } from '../config';
+import type { ListMaster } from '../services/types';
 
 const Home: React.FC = () => {
     // ... (state remains same)
@@ -23,20 +20,7 @@ const Home: React.FC = () => {
 
     useEffect(() => {
         const getProfile = async () => {
-            if (!ENABLE_CLOUD_SYNC) {
-                setHouseholdId('guest_household');
-                return;
-            }
-
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                const { data } = await supabase
-                    .from('profiles')
-                    .select('household_id')
-                    .eq('id', user.id)
-                    .single();
-                if (data) setHouseholdId(data.household_id);
-            }
+            setHouseholdId('guest_household');
         };
         getProfile();
     }, []);

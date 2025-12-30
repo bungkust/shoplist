@@ -2,10 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButtons, IonBackButton, IonIcon, IonSpinner } from '@ionic/react';
 import { useParams } from 'react-router-dom';
 import { walletOutline, timeOutline, storefrontOutline } from 'ionicons/icons';
-import { supabase } from '../services/supabaseClient';
 import { localItemService } from '../services/localService';
-import { ENABLE_CLOUD_SYNC } from '../config';
-import type { TransactionHistory } from '../types/supabase';
+import type { TransactionHistory } from '../services/types';
 
 const ItemDetail: React.FC = () => {
     const { itemName } = useParams<{ itemName: string }>();
@@ -23,37 +21,12 @@ const ItemDetail: React.FC = () => {
 
     const fetchItemHistory = async (name: string) => {
         setLoading(true);
-        if (!ENABLE_CLOUD_SYNC) {
-            // Local Mode
-            const allHistory = await localItemService.getHistory('guest_household', 0, 1000); // Fetch enough to filter
-            const itemHistory = allHistory
-                .filter(t => t.item_name === name)
-                .sort((a, b) => new Date(b.purchased_at).getTime() - new Date(a.purchased_at).getTime());
-            setHistory(itemHistory);
-            setLoading(false);
-            return;
-        }
-
-        // Cloud Mode
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('household_id')
-            .eq('id', user.id)
-            .single();
-
-        if (profile && profile.household_id) {
-            const { data } = await supabase
-                .from('transaction_history')
-                .select('*')
-                .eq('household_id', profile.household_id)
-                .eq('item_name', name)
-                .order('purchased_at', { ascending: false });
-
-            setHistory(data || []);
-        }
+        // Local Mode
+        const allHistory = await localItemService.getHistory('guest_household', 0, 1000); // Fetch enough to filter
+        const itemHistory = allHistory
+            .filter(t => t.item_name === name)
+            .sort((a, b) => new Date(b.purchased_at).getTime() - new Date(a.purchased_at).getTime());
+        setHistory(itemHistory);
         setLoading(false);
     };
 

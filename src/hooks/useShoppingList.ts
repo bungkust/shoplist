@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../services/supabaseClient';
-import type { ShoppingItem } from '../types/supabase';
-import { ENABLE_CLOUD_SYNC } from '../config';
+import type { ShoppingItem } from '../services/types';
 import { localItemService } from '../services/localService';
 
 export const useShoppingList = (householdId: string | null, listId: string | null) => {
@@ -24,31 +22,6 @@ export const useShoppingList = (householdId: string | null, listId: string | nul
         } else {
             fetchItems(false);
         }
-
-        // Realtime Subscription (Only in Cloud Mode)
-        if (ENABLE_CLOUD_SYNC) {
-            const channel = supabase
-                .channel(`shopping_items_${listId}`)
-                .on(
-                    'postgres_changes',
-                    {
-                        event: '*',
-                        schema: 'public',
-                        table: 'shopping_items',
-                        filter: `list_id=eq.${listId}`
-                    },
-                    (payload) => {
-                        console.log('Realtime change:', payload);
-                        setPage(0); // Reset to first page on realtime update
-                        fetchItems(true); // Refresh on any change
-                    }
-                )
-                .subscribe();
-
-            return () => {
-                supabase.removeChannel(channel);
-            };
-        }
     }, [householdId, listId, page]);
 
     const fetchItems = async (reset = false) => {
@@ -58,35 +31,13 @@ export const useShoppingList = (householdId: string | null, listId: string | nul
         setLoading(true);
 
         try {
-            if (!ENABLE_CLOUD_SYNC) {
-                const data = await localItemService.getItems(listId, currentPage, PAGE_SIZE);
-                if (reset) {
-                    setItems(data);
-                } else {
-                    setItems(prev => [...prev, ...data]);
-                }
-                setHasMore(data.length === PAGE_SIZE);
+            const data = await localItemService.getItems(listId, currentPage, PAGE_SIZE);
+            if (reset) {
+                setItems(data);
             } else {
-                const start = currentPage * PAGE_SIZE;
-                const end = start + PAGE_SIZE - 1;
-
-                const { data, error } = await supabase
-                    .from('shopping_items')
-                    .select('*')
-                    .eq('list_id', listId)
-                    .order('created_at', { ascending: false })
-                    .range(start, end);
-
-                if (error) throw error;
-
-                const newData = data || [];
-                if (reset) {
-                    setItems(newData);
-                } else {
-                    setItems(prev => [...prev, ...newData]);
-                }
-                setHasMore(newData.length === PAGE_SIZE);
+                setItems(prev => [...prev, ...data]);
             }
+            setHasMore(data.length === PAGE_SIZE);
         } catch (error) {
             console.error('Error fetching items:', error);
         } finally {
@@ -118,23 +69,14 @@ export const useShoppingList = (householdId: string | null, listId: string | nul
         setItems(prev => [newItem, ...prev]);
 
         try {
-            if (!ENABLE_CLOUD_SYNC) {
-                const addedItem = await localItemService.addItem({
-                    ...item,
-                    household_id: householdId,
-                    list_id: listId
-                });
-                // Replace optimistic item with real one (with real ID)
-                if (addedItem) {
-                    setItems(prev => prev.map(i => i.id === tempId ? addedItem : i));
-                }
-            } else {
-                const { error } = await supabase
-                    .from('shopping_items')
-                    .insert([{ ...item, household_id: householdId, list_id: listId }]);
-
-                if (error) throw error;
-                // Realtime will handle the actual update
+            const addedItem = await localItemService.addItem({
+                ...item,
+                household_id: householdId,
+                list_id: listId
+            });
+            // Replace optimistic item with real one (with real ID)
+            if (addedItem) {
+                setItems(prev => prev.map(i => i.id === tempId ? addedItem : i));
             }
         } catch (error) {
             console.error('Error adding item:', error);
@@ -150,16 +92,7 @@ export const useShoppingList = (householdId: string | null, listId: string | nul
         ));
 
         try {
-            if (!ENABLE_CLOUD_SYNC) {
-                await localItemService.toggleItem(id, isPurchased);
-            } else {
-                const { error } = await supabase
-                    .from('shopping_items')
-                    .update({ is_purchased: isPurchased })
-                    .eq('id', id);
-
-                if (error) throw error;
-            }
+            await localItemService.toggleItem(id, isPurchased);
         } catch (error) {
             console.error('Error toggling item:', error);
             // Revert
@@ -175,16 +108,7 @@ export const useShoppingList = (householdId: string | null, listId: string | nul
         setItems(prev => prev.filter(item => item.id !== id));
 
         try {
-            if (!ENABLE_CLOUD_SYNC) {
-                await localItemService.deleteItem(id);
-            } else {
-                const { error } = await supabase
-                    .from('shopping_items')
-                    .delete()
-                    .eq('id', id);
-
-                if (error) throw error;
-            }
+            await localItemService.deleteItem(id);
         } catch (error) {
             console.error('Error deleting item:', error);
             setItems(oldItems);
@@ -200,34 +124,7 @@ export const useShoppingList = (householdId: string | null, listId: string | nul
         setItems(prev => prev.map(i => i.id === id ? { ...i, is_purchased: true } : i));
 
         try {
-            if (!ENABLE_CLOUD_SYNC) {
-                await localItemService.moveToHistory(item, finalPrice, totalSize, baseUnit, itemName, category, listName, storeName);
-            } else {
-                // 1. Add to History
-                const { error: historyError } = await supabase
-                    .from('transaction_history')
-                    .insert([{
-                        household_id: householdId,
-                        item_name: itemName,
-                        final_price: finalPrice,
-                        total_size: totalSize,
-                        base_unit: baseUnit,
-                        category: category,
-                        list_name: listName,
-                        store_name: storeName,
-                        purchased_at: new Date().toISOString()
-                    }]);
-
-                if (historyError) throw historyError;
-
-                // 2. Update Shopping Item (Mark as purchased)
-                const { error: updateError } = await supabase
-                    .from('shopping_items')
-                    .update({ is_purchased: true })
-                    .eq('id', id);
-
-                if (updateError) throw updateError;
-            }
+            await localItemService.moveToHistory(item, finalPrice, totalSize, baseUnit, itemName, category, listName, storeName);
 
         } catch (error) {
             console.error('Error moving to history:', error);

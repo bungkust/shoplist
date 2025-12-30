@@ -3,9 +3,7 @@ import { IonApp, IonRouterOutlet, setupIonicReact, IonTabs, IonTabBar, IonTabBut
 import { IonReactRouter } from '@ionic/react-router';
 
 import { useState, useEffect } from 'react';
-import { supabase } from './services/supabaseClient';
 import Home from './pages/Home';
-import Login from './pages/Login';
 import Register from './pages/Register';
 import History from './pages/History';
 import ItemDetail from './pages/ItemDetail';
@@ -41,11 +39,9 @@ import './theme/variables.css';
 
 setupIonicReact();
 
-import { ENABLE_CLOUD_SYNC } from './config';
+
 
 const App: React.FC = () => {
-  const [session, setSession] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
@@ -66,31 +62,9 @@ const App: React.FC = () => {
       setIsInitialized(init === 'true');
     };
     checkInit();
-
-    if (!ENABLE_CLOUD_SYNC) {
-      // Offline Mode: Simulate a session
-      setSession({ user: { id: 'guest', email: 'guest@shoplist.local' } });
-      setLoading(false);
-      return;
-    }
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
 
-  if (loading) {
-    return <IonApp><div className="flex items-center justify-center h-full">Loading...</div></IonApp>;
-  }
+
 
   // New User / Not Initialized Flow
   if (!isInitialized) {
@@ -113,25 +87,7 @@ const App: React.FC = () => {
     );
   }
 
-  if (!session && ENABLE_CLOUD_SYNC) {
-    return (
-      <IonApp>
-        <IonReactRouter>
-          <IonRouterOutlet>
-            <Route exact path="/login">
-              <Login />
-            </Route>
-            <Route exact path="/register">
-              <Register />
-            </Route>
-            <Route exact path="/">
-              <Redirect to="/login" />
-            </Route>
-          </IonRouterOutlet>
-        </IonReactRouter>
-      </IonApp>
-    );
-  }
+
 
   return (
     <IonApp>

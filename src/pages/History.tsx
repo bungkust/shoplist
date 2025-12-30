@@ -4,10 +4,8 @@ import type { RefresherEventDetail } from '@ionic/react';
 import { refreshOutline, timeOutline, searchOutline, closeCircle, filterOutline } from 'ionicons/icons';
 import CategoryFilterModal from '../components/CategoryFilterModal';
 import ListSelectionModal from '../components/ListSelectionModal';
-import { supabase } from '../services/supabaseClient';
-import type { TransactionHistory, ListMaster } from '../types/supabase';
-import { ENABLE_CLOUD_SYNC } from '../config';
 import { localItemService, localListService } from '../services/localService';
+import type { TransactionHistory, ListMaster } from '../services/types';
 import { useHistory } from 'react-router-dom';
 
 const History: React.FC = () => {
@@ -36,20 +34,7 @@ const History: React.FC = () => {
 
   useEffect(() => {
     const getProfile = async () => {
-      if (!ENABLE_CLOUD_SYNC) {
-        setHouseholdId('guest_household');
-        return;
-      }
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('household_id')
-          .eq('id', user.id)
-          .single();
-        if (data) setHouseholdId(data.household_id);
-      }
+      setHouseholdId('guest_household');
     };
     getProfile();
   }, []);
@@ -62,35 +47,13 @@ const History: React.FC = () => {
     const currentPage = reset ? 0 : page;
     setLoading(true);
 
-    if (!ENABLE_CLOUD_SYNC) {
-      const data = await localItemService.getHistory(householdId, currentPage, PAGE_SIZE);
-      if (reset) {
-        setHistory(data);
-      } else {
-        setHistory(prev => [...prev, ...data]);
-      }
-      setHasMore(data.length === PAGE_SIZE);
-      setLoading(false);
-      return;
-    }
-
-    const start = currentPage * PAGE_SIZE;
-    const end = start + PAGE_SIZE - 1;
-
-    const { data } = await supabase
-      .from('transaction_history')
-      .select('*')
-      .eq('household_id', householdId)
-      .order('purchased_at', { ascending: false })
-      .range(start, end);
-
-    const newData = data || [];
+    const data = await localItemService.getHistory(householdId, currentPage, PAGE_SIZE);
     if (reset) {
-      setHistory(newData);
+      setHistory(data);
     } else {
-      setHistory(prev => [...prev, ...newData]);
+      setHistory(prev => [...prev, ...data]);
     }
-    setHasMore(newData.length === PAGE_SIZE);
+    setHasMore(data.length === PAGE_SIZE);
     setLoading(false);
   };
 
@@ -132,15 +95,7 @@ const History: React.FC = () => {
 
     let lists: ListMaster[] = [];
 
-    if (!ENABLE_CLOUD_SYNC) {
-      lists = await localListService.getLists(householdId);
-    } else {
-      const { data } = await supabase
-        .from('list_master')
-        .select('*')
-        .eq('household_id', householdId);
-      lists = data || [];
-    }
+    lists = await localListService.getLists(householdId);
 
     if (lists.length === 0) {
       setToastMessage('No shopping list found. Please create one first.');
@@ -162,35 +117,15 @@ const History: React.FC = () => {
   const executeRestock = async (item: TransactionHistory, listId: string) => {
     if (!householdId) return;
 
-    if (!ENABLE_CLOUD_SYNC) {
-      await localItemService.addItem({
-        item_name: item.item_name,
-        quantity: item.total_size,
-        unit: item.base_unit,
-        household_id: householdId,
-        list_id: listId
-      });
-      setToastMessage('Item added back to list!');
-      setShowToast(true);
-    } else {
-      const { error } = await supabase
-        .from('shopping_items')
-        .insert([{
-          item_name: item.item_name,
-          quantity: item.total_size,
-          unit: item.base_unit,
-          household_id: householdId,
-          list_id: listId
-        }]);
-
-      if (!error) {
-        setToastMessage('Item added back to list!');
-        setShowToast(true);
-      } else {
-        setToastMessage('Failed to add item.');
-        setShowToast(true);
-      }
-    }
+    await localItemService.addItem({
+      item_name: item.item_name,
+      quantity: item.total_size,
+      unit: item.base_unit,
+      household_id: householdId,
+      list_id: listId
+    });
+    setToastMessage('Item added back to list!');
+    setShowToast(true);
   };
 
   const openItemDetail = (itemName: string) => {

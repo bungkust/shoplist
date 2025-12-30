@@ -1,5 +1,4 @@
-import type { ListService, ItemService } from './types';
-import type { ListMaster, ShoppingItem, TransactionHistory } from '../types/supabase';
+import type { ListService, ItemService, ListMaster, ShoppingItem, TransactionHistory } from './types';
 
 export const STORAGE_KEYS = {
     LISTS: 'guest_lists',

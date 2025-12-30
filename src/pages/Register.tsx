@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { IonContent, IonPage, IonInput, IonButton, IonLoading, IonToast, IonIcon, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton } from '@ionic/react';
 import { personAddOutline, eyeOutline, eyeOffOutline } from 'ionicons/icons';
-import { supabase } from '../services/supabaseClient';
 import { useHistory } from 'react-router-dom';
 
 const Register: React.FC = () => {
@@ -39,23 +38,21 @@ const Register: React.FC = () => {
         }
 
         setLoading(true);
-        const { error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                data: { full_name: name }
-            }
-        });
-        setLoading(false);
-
-        if (error) {
-            setToastMessage(error.message);
-        } else {
-            setToastMessage('Registrasi berhasil! Cek email untuk verifikasi.');
+        // Simulate API call
+        setTimeout(() => {
+            const userProfile = {
+                id: 'local_user_' + Date.now(),
+                name: name,
+                email: email
+            };
+            localStorage.setItem('user_profile', JSON.stringify(userProfile));
+            setLoading(false);
+            setToastMessage('Registrasi berhasil! Silakan login.');
+            setShowToast(true);
             setTimeout(() => {
                 history.push('/login');
-            }, 2000);
-        }
+            }, 1500);
+        }, 1000);
         setShowToast(true);
     };
 
