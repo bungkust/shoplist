@@ -11,7 +11,7 @@ interface CheckoutModalProps {
     onClose: () => void;
     item: ShoppingItem | null;
     householdId: string | null;
-    onConfirm: (finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string, storeName?: string) => void;
+    onConfirm: (finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string, storeName?: string, notes?: string) => void;
 }
 
 const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, householdId, onConfirm }) => {
@@ -22,6 +22,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, ho
     const [category, setCategory] = useState<string>('');
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+    const [notes, setNotes] = useState<string>('');
 
     // Store State
     const [store, setStore] = useState<string>('');
@@ -63,20 +65,23 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, ho
 
     useEffect(() => {
         if (item) {
-            setPrice('');
+            console.log('CheckoutModal item:', item);
+            setPrice(item.price ? item.price.toString() : '');
             setSize(item.quantity.toString());
             setUnit(item.unit);
             setItemName(item.item_name);
+            setNotes(item.notes || '');
 
-            // Auto-detect category
-            // Auto-detect category
+            // Auto-detect category or use saved category
+            const savedCategory = item.category;
             const detected = detectCategory(item.item_name);
-            const defaultCategory = detected || 'Lainnya';
+            const defaultCategory = savedCategory || detected || 'Lainnya';
             setCategory(defaultCategory);
             setSearchTerm(defaultCategory);
 
-            setStore('');
-            setStoreSearchTerm('');
+            const savedStore = item.store_name || '';
+            setStore(savedStore);
+            setStoreSearchTerm(savedStore);
             setIsStoreDropdownOpen(false);
 
             setIsDropdownOpen(false);
@@ -114,7 +119,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, ho
             if (finalStore) {
                 await localStoreService.addStore(householdId || 'local', finalStore);
             }
-            onConfirm(parseFloat(price), parseFloat(size), unit, itemName, category || undefined, finalStore || undefined);
+            onConfirm(parseFloat(price), parseFloat(size), unit, itemName, category || undefined, finalStore || undefined, notes || undefined);
             onClose();
         }
     };
@@ -324,6 +329,19 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, ho
                                     )}
                                 </div>
                             )}
+                        </div>
+                    </div>
+
+                    {/* Notes (Optional) */}
+                    <div className="mt-2" style={{ animationDelay: '0.4s' }}>
+                        <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Notes (Optional)</label>
+                        <div className="bg-gray-50 rounded-xl px-3 py-1.5 focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                            <IonInput
+                                value={notes}
+                                onIonChange={e => setNotes(e.detail.value!)}
+                                placeholder="Add notes (e.g. Brand, Promo)..."
+                                className="w-full text-text-main font-medium text-xs"
+                            />
                         </div>
                     </div>
 

@@ -115,16 +115,33 @@ export const useShoppingList = (householdId: string | null, listId: string | nul
         }
     };
 
-    const moveToHistory = async (id: string, finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string, listName?: string, storeName?: string) => {
+    const moveToHistory = async (id: string, finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string, listName?: string, storeName?: string, notes?: string) => {
         const item = items.find(i => i.id === id);
         if (!item || !householdId) return;
 
-        // Optimistic Update: Mark as purchased instead of removing
+        // Optimistic Update: Mark as purchased AND update details
         const oldItems = [...items];
-        setItems(prev => prev.map(i => i.id === id ? { ...i, is_purchased: true } : i));
+        setItems(prev => prev.map(i => {
+            if (i.id === id) {
+                const updated = {
+                    ...i,
+                    is_purchased: true,
+                    item_name: itemName,
+                    quantity: totalSize,
+                    unit: baseUnit,
+                    notes: notes,
+                    price: finalPrice,
+                    category: category,
+                    store_name: storeName
+                };
+                console.log('Optimistic update:', updated);
+                return updated;
+            }
+            return i;
+        }));
 
         try {
-            await localItemService.moveToHistory(item, finalPrice, totalSize, baseUnit, itemName, category, listName, storeName);
+            await localItemService.moveToHistory(item, finalPrice, totalSize, baseUnit, itemName, category, listName, storeName, notes);
 
         } catch (error) {
             console.error('Error moving to history:', error);

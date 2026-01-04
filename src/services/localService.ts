@@ -167,7 +167,7 @@ export const localItemService: ItemService = {
         localStorage.setItem(STORAGE_KEYS.ITEMS, JSON.stringify(newItems));
     },
 
-    async moveToHistory(item: ShoppingItem, finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string, listName?: string, storeName?: string): Promise<void> {
+    async moveToHistory(item: ShoppingItem, finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string, listName?: string, storeName?: string, notes?: string): Promise<void> {
         // 1. Add to History
         const rawHistory = localStorage.getItem(STORAGE_KEYS.HISTORY);
         const history = rawHistory ? JSON.parse(rawHistory) : [];
@@ -183,12 +183,29 @@ export const localItemService: ItemService = {
             category: category,
             list_name: listName,
             store_name: storeName,
-            purchased_at: new Date().toISOString()
+            purchased_at: new Date().toISOString(),
+            notes: notes
         });
         localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(history));
 
-        // 2. Mark as Purchased (Don't delete)
-        await this.toggleItem(item.id, true);
+        // 2. Update Item Details & Mark as Purchased
+        const rawItems = localStorage.getItem(STORAGE_KEYS.ITEMS);
+        const items: ShoppingItem[] = rawItems ? JSON.parse(rawItems) : [];
+
+        const index = items.findIndex(i => i.id === item.id);
+        if (index !== -1) {
+            items[index].is_purchased = true;
+            // Update details from the confirmation modal
+            items[index].item_name = itemName;
+            items[index].quantity = totalSize;
+            items[index].unit = baseUnit;
+            items[index].notes = notes;
+            items[index].price = finalPrice;
+            items[index].category = category;
+            items[index].store_name = storeName;
+
+            localStorage.setItem(STORAGE_KEYS.ITEMS, JSON.stringify(items));
+        }
     },
 
     async getHistory(_householdId: string, page: number = 0, pageSize: number = 20, searchTerm: string = '', categories: string[] = []): Promise<TransactionHistory[]> {

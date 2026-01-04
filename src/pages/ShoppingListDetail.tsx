@@ -103,9 +103,9 @@ const ShoppingListDetail: React.FC = () => {
         }
     }, [isListening, transcript, isModalOpen, householdId]);
 
-    const handleCheckoutConfirm = (finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string, storeName?: string) => {
+    const handleCheckoutConfirm = (finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string, storeName?: string, notes?: string) => {
         if (selectedItem) {
-            moveToHistory(selectedItem.id, finalPrice, totalSize, baseUnit, itemName, category, listName, storeName);
+            moveToHistory(selectedItem.id, finalPrice, totalSize, baseUnit, itemName, category, listName, storeName, notes);
             setToastMessage('Saved to History');
             setShowToast(true);
         }

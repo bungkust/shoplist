@@ -1,7 +1,7 @@
 import React from 'react';
 import { IonIcon, IonCheckbox } from '@ionic/react';
 import { trashOutline } from 'ionicons/icons';
-import type { ShoppingItem } from '../types/supabase';
+import type { ShoppingItem } from '../services/types';
 
 interface ShopCardProps {
     item: ShoppingItem;

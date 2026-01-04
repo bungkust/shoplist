@@ -8,7 +8,6 @@ const Login: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const [toastMessage, setToastMessage] = useState('');
     const [showToast, setShowToast] = useState(false);
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -89,7 +88,7 @@ const Login: React.FC = () => {
                 <IonToast
                     isOpen={showToast}
                     onDidDismiss={() => setShowToast(false)}
-                    message={toastMessage}
+                    message="Login failed"
                     duration={2000}
                     position="top"
                     color="danger"
