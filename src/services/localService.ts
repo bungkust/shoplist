@@ -167,7 +167,7 @@ export const localItemService: ItemService = {
         localStorage.setItem(STORAGE_KEYS.ITEMS, JSON.stringify(newItems));
     },
 
-    async moveToHistory(item: ShoppingItem, finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string, listName?: string, storeName?: string, notes?: string): Promise<void> {
+    async moveToHistory(item: ShoppingItem, finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string, listName?: string, storeName?: string, notes?: string, brand?: string): Promise<void> {
         // 1. Add to History
         const rawHistory = localStorage.getItem(STORAGE_KEYS.HISTORY);
         const history = rawHistory ? JSON.parse(rawHistory) : [];
@@ -183,6 +183,7 @@ export const localItemService: ItemService = {
             category: category,
             list_name: listName,
             store_name: storeName,
+            brand: brand,
             purchased_at: new Date().toISOString(),
             notes: notes
         });
@@ -203,8 +204,20 @@ export const localItemService: ItemService = {
             items[index].price = finalPrice;
             items[index].category = category;
             items[index].store_name = storeName;
+            items[index].brand = brand;
 
             localStorage.setItem(STORAGE_KEYS.ITEMS, JSON.stringify(items));
+        }
+    },
+
+    async updateHistory(id: string, updates: Partial<TransactionHistory>): Promise<void> {
+        const raw = localStorage.getItem(STORAGE_KEYS.HISTORY);
+        const history: TransactionHistory[] = raw ? JSON.parse(raw) : [];
+
+        const index = history.findIndex(h => h.id === id);
+        if (index !== -1) {
+            history[index] = { ...history[index], ...updates };
+            localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(history));
         }
     },
 

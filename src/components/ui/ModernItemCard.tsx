@@ -52,6 +52,12 @@ const ModernItemCard: React.FC<ModernItemCardProps> = ({ item, onToggle, onDelet
                     <span className={`text-base font-semibold text-text-main transition-all duration-300 ${item.is_purchased ? 'line-through text-gray-400 decoration-2' : ''}`}>
                         {item.item_name}
                     </span>
+                    {/* Brand */}
+                    {item.brand && (
+                        <span className="text-xs text-blue-600 font-medium">
+                            {item.brand}
+                        </span>
+                    )}
                     {/* Detail Qty & Unit */}
                     <span className="text-sm text-text-muted">
                         {item.quantity} {item.unit}

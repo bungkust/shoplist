@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonIcon, IonToast, IonAlert } from '@ionic/react';
 import { App } from '@capacitor/app';
-import { personCircleOutline, logOutOutline, copyOutline, mailOutline, chevronDownOutline, createOutline, timeOutline, trashOutline } from 'ionicons/icons';
+import { logOutOutline, copyOutline, chevronDownOutline, createOutline, timeOutline, trashOutline } from 'ionicons/icons';
 // import { STORAGE_KEYS } from '../services/localService';
 import { useHistory } from 'react-router-dom';
+import { WHATS_NEW_DATA } from '../data/whatsNew';
 
 const Settings: React.FC = () => {
     const [language, setLanguage] = useState<'en-US' | 'id-ID'>(
@@ -154,28 +155,71 @@ const Settings: React.FC = () => {
                     <div className="bg-white rounded-3xl p-6 shadow-soft animate-enter-up relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-10 -mt-10 blur-2xl"></div>
 
-                        <div className="relative z-10 flex flex-col items-center text-center">
-                            <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-blue-50 rounded-full flex items-center justify-center mb-4 shadow-sm">
-                                <IonIcon icon={personCircleOutline} className="text-6xl text-primary" />
-                            </div>
-                            <div className="flex items-center gap-2 justify-center w-full">
-                                <h2 className="text-xl font-bold text-text-main truncate max-w-[200px]">
+                        <div className="relative z-10 flex flex-col items-start mb-6">
+                            <div className="flex items-center gap-3 mb-1">
+                                <h2 className="text-2xl font-bold text-text-main truncate max-w-[250px]">
                                     {displayName}
                                 </h2>
                                 <button
                                     onClick={() => setShowEditNameAlert(true)}
-                                    className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-primary hover:bg-blue-50 transition-colors"
+                                    className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-primary hover:bg-blue-50 transition-colors border border-gray-100"
                                 >
                                     <IonIcon icon={createOutline} className="text-sm" />
                                 </button>
                             </div>
-                            <p className="text-text-muted text-sm flex items-center gap-1 mt-1">
-                                <IonIcon icon={mailOutline} />
-                                Offline Mode
+                            <p className="text-text-muted text-sm font-medium">
+                                Local Profile
                             </p>
-                            <span className="mt-2 px-3 py-1 bg-orange-100 text-orange-600 text-xs font-bold rounded-full">
-                                Local Storage Only
-                            </span>
+                        </div>
+
+                        <div className="h-px bg-gray-100 w-full mb-6 relative z-10" />
+
+                        {/* Data Stats & Controls */}
+                        <div className="relative z-10">
+                            <div className="grid grid-cols-3 gap-4 mb-6">
+                                <div className="bg-gray-50 rounded-2xl p-3 text-center border border-gray-100">
+                                    <span className="block text-2xl font-bold text-text-main">{dataStats.lists}</span>
+                                    <span className="text-xs text-text-muted">Lists</span>
+                                </div>
+                                <div className="bg-gray-50 rounded-2xl p-3 text-center border border-gray-100">
+                                    <span className="block text-2xl font-bold text-text-main">{dataStats.items}</span>
+                                    <span className="text-xs text-text-muted">Items</span>
+                                </div>
+                                <div className="bg-gray-50 rounded-2xl p-3 text-center border border-gray-100">
+                                    <span className="block text-2xl font-bold text-text-main">{dataStats.history}</span>
+                                    <span className="text-xs text-text-muted">History</span>
+                                </div>
+                            </div>
+
+                            {lastBackup && (
+                                <div className="flex items-center gap-2 text-xs text-text-muted bg-gray-50 p-2 rounded-lg inline-flex mb-4 border border-gray-100">
+                                    <IonIcon icon={timeOutline} />
+                                    <span>Last backup: {new Date(lastBackup).toLocaleDateString()} {new Date(lastBackup).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                </div>
+                            )}
+
+                            <div className="space-y-2">
+                                <button
+                                    onClick={handleBackup}
+                                    className="w-full flex items-center justify-center gap-2 p-3 bg-primary hover:bg-blue-600 text-white rounded-xl font-bold text-sm transition-all active:scale-[0.98] shadow-lg shadow-blue-500/20"
+                                >
+                                    <IonIcon icon={copyOutline} />
+                                    <span>Backup to File</span>
+                                </button>
+
+                                <div className="relative">
+                                    <input
+                                        type="file"
+                                        accept=".json"
+                                        onChange={handleRestore}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                    />
+                                    <button className="w-full flex items-center justify-center gap-2 p-3 bg-gray-50 hover:bg-gray-100 text-text-main rounded-xl font-bold text-sm transition-all border border-gray-100">
+                                        <IonIcon icon={chevronDownOutline} className="rotate-180" />
+                                        <span>Restore</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -225,68 +269,7 @@ const Settings: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Data Management (Local Only) - Premium UI */}
-                    <div className="space-y-3 animate-enter-up" style={{ animationDelay: '0.25s' }}>
-                        <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider ml-2">Data Management</h3>
 
-                        {/* Stats Card */}
-                        <div className="bg-white rounded-3xl p-6 shadow-soft relative overflow-hidden border border-gray-50">
-
-                            <div className="relative z-10">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div>
-                                        <p className="text-text-muted text-xs font-medium uppercase tracking-wider">Local Storage</p>
-                                        <h4 className="text-2xl font-bold mt-1 text-text-main">My Data</h4>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-3 gap-4 mb-6">
-                                    <div className="bg-gray-50 rounded-2xl p-3 text-center border border-gray-100">
-                                        <span className="block text-2xl font-bold text-text-main">{dataStats.lists}</span>
-                                        <span className="text-xs text-text-muted">Lists</span>
-                                    </div>
-                                    <div className="bg-gray-50 rounded-2xl p-3 text-center border border-gray-100">
-                                        <span className="block text-2xl font-bold text-text-main">{dataStats.items}</span>
-                                        <span className="text-xs text-text-muted">Items</span>
-                                    </div>
-                                    <div className="bg-gray-50 rounded-2xl p-3 text-center border border-gray-100">
-                                        <span className="block text-2xl font-bold text-text-main">{dataStats.history}</span>
-                                        <span className="text-xs text-text-muted">History</span>
-                                    </div>
-                                </div>
-
-                                {lastBackup && (
-                                    <div className="flex items-center gap-2 text-xs text-text-muted bg-gray-50 p-2 rounded-lg inline-flex mb-4 border border-gray-100">
-                                        <IonIcon icon={timeOutline} />
-                                        <span>Last backup: {new Date(lastBackup).toLocaleDateString()} {new Date(lastBackup).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                    </div>
-                                )}
-
-                                <div className="space-y-2">
-                                    <button
-                                        onClick={handleBackup}
-                                        className="w-full flex items-center justify-center gap-2 p-3 bg-primary hover:bg-blue-600 text-white rounded-xl font-bold text-sm transition-all active:scale-[0.98] shadow-lg shadow-blue-500/20"
-                                    >
-                                        <IonIcon icon={copyOutline} />
-                                        <span>Backup to File</span>
-                                    </button>
-
-                                    <div className="relative">
-                                        <input
-                                            type="file"
-                                            accept=".json"
-                                            onChange={handleRestore}
-                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                        />
-                                        <button className="w-full flex items-center justify-center gap-2 p-3 bg-gray-50 hover:bg-gray-100 text-text-main rounded-xl font-bold text-sm transition-all border border-gray-100">
-                                            <IonIcon icon={chevronDownOutline} className="rotate-180" />
-                                            <span>Restore</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
                     {/* Legal Section */}
                     <div className="space-y-2 animate-enter-up" style={{ animationDelay: '0.25s' }}>
@@ -304,6 +287,23 @@ const Settings: React.FC = () => {
                                 className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
                             >
                                 <span className="text-text-main font-medium">Terms & Conditions</span>
+                                <IonIcon icon={chevronDownOutline} className="text-gray-300 -rotate-90" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* What's New Section */}
+                    <div className="space-y-2 animate-enter-up" style={{ animationDelay: '0.27s' }}>
+                        <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider ml-2">About App</h3>
+                        <div className="bg-white rounded-2xl overflow-hidden shadow-soft">
+                            <button
+                                onClick={() => history.push('/whats-new')}
+                                className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors text-left group"
+                            >
+                                <div>
+                                    <span className="text-text-main font-bold block">What's New</span>
+                                    <span className="text-xs text-text-muted">Latest version {WHATS_NEW_DATA[0].version}</span>
+                                </div>
                                 <IonIcon icon={chevronDownOutline} className="text-gray-300 -rotate-90" />
                             </button>
                         </div>

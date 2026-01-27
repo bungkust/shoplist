@@ -12,6 +12,7 @@ import ShoppingListDetail from './pages/ShoppingListDetail';
 import Settings from './pages/Settings';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
+import WhatsNew from './pages/WhatsNew';
 import Welcome from './pages/Welcome';
 import Onboarding from './pages/Onboarding';
 import Statistics from './pages/Statistics';
@@ -49,7 +50,8 @@ const App: React.FC = () => {
     const initNative = async () => {
       try {
         await StatusBar.setStyle({ style: Style.Light });
-        await StatusBar.setBackgroundColor({ color: '#ffffff' });
+        // Make the WebView transparent behind the status bar
+        await StatusBar.setOverlaysWebView({ overlay: true });
       } catch (e) {
         console.log('Status bar not available');
       }
@@ -124,6 +126,9 @@ const App: React.FC = () => {
             <Route exact path="/terms">
               <TermsConditions />
             </Route>
+            <Route exact path="/whats-new">
+              <WhatsNew />
+            </Route>
             <Route exact path="/">
               <Redirect to="/home" />
             </Route>
@@ -132,7 +137,15 @@ const App: React.FC = () => {
             </Route>
           </IonRouterOutlet>
 
-          <IonTabBar slot="bottom" className="border-t border-gray-100 shadow-sm pb-2 pt-2 h-16">
+          <IonTabBar
+            slot="bottom"
+            className="border-t border-gray-100 shadow-sm"
+            style={{
+              paddingBottom: 'calc(6px + env(safe-area-inset-bottom))',
+              height: 'calc(58px + env(safe-area-inset-bottom))',
+              display: 'flex'
+            }}
+          >
             <IonTabButton tab="home" href="/home">
               <IonIcon icon={listOutline} />
               <IonLabel>My Lists</IonLabel>

@@ -37,9 +37,10 @@ ion-toolbar {
     /* Gradient Primary */
     --color: #ffffff;
     --border-width: 0;
-    --padding-top: 20px;
-    --padding-bottom: 20px;
-    --min-height: 80px;
+    /* Auto-detect safe area + minimal aesthetic padding */
+    --padding-top: calc(5px + env(safe-area-inset-top));
+    --padding-bottom: 5px;
+    --min-height: calc(50px + env(safe-area-inset-top));
 }
 
 ion-title {

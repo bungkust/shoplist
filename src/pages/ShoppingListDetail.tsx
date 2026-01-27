@@ -81,16 +81,24 @@ const ShoppingListDetail: React.FC = () => {
 
             if (parsed.name) {
                 Haptics.impact({ style: ImpactStyle.Light });
-                addItem({
+
+                const itemData: any = {
                     item_name: parsed.name,
                     quantity: parsed.qty,
                     unit: parsed.unit
-                });
+                };
+
+                if (parsed.brand) {
+                    itemData.brand = parsed.brand;
+                }
+
+                addItem(itemData);
 
                 if (!navigator.onLine) {
                     setToastMessage('Offline. Data saved locally.');
                 } else {
-                    setToastMessage(`Added: ${parsed.name}`);
+                    const msg = parsed.brand ? `Added: ${parsed.name} (${parsed.brand})` : `Added: ${parsed.name}`;
+                    setToastMessage(msg);
                 }
                 setShowToast(true);
             }
@@ -103,9 +111,9 @@ const ShoppingListDetail: React.FC = () => {
         }
     }, [isListening, transcript, isModalOpen, householdId]);
 
-    const handleCheckoutConfirm = (finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string, storeName?: string, notes?: string) => {
+    const handleCheckoutConfirm = (finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string, storeName?: string, notes?: string, brand?: string) => {
         if (selectedItem) {
-            moveToHistory(selectedItem.id, finalPrice, totalSize, baseUnit, itemName, category, listName, storeName, notes);
+            moveToHistory(selectedItem.id, finalPrice, totalSize, baseUnit, itemName, category, listName, storeName, notes, brand);
             setToastMessage('Saved to History');
             setShowToast(true);
         }

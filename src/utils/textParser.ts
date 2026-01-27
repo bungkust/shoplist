@@ -3,6 +3,7 @@ export interface ParsedItem {
     name: string;
     qty: number;
     unit: string;
+    brand?: string;
 }
 
 const UNITS_ID = {
@@ -143,10 +144,68 @@ export const parseVoiceInput = (text: string, lang: 'id-ID' | 'en-US' = 'id-ID')
     const prefixRegex = /^(beli|buy|tambahkan|add|catat|note)\s+/i;
     name = name.replace(prefixRegex, '');
 
+    // Step D: Detect Brand in Remaining Name
+    // Strategy: Look for specific separators "merk", "brand", "cap", "of"
+    // e.g. "Susu Ultra Milk 1 liter" -> No separator, hard to tell. 
+    // e.g. "Susu merk Ultra Milk 1 liter" -> Separator "merk".
+
+    let brand = '';
+    const brandSeparators = ['merk', 'brand', 'cap', 'produksi', 'buatan', 'of', 'from', 'by', 'dari'];
+
+    // Check if any separator exists
+    const lowerName = name.toLowerCase();
+    let bestSeparatorIndex = -1;
+    let detectedSeparatorLength = 0;
+
+    for (const sep of brandSeparators) {
+        // We want the last occurrence to act as the divider closest to the brand name
+        // padded with spaces to avoid matching inside words
+        const index = lowerName.lastIndexOf(` ${sep} `);
+        if (index !== -1) {
+            if (index > bestSeparatorIndex) {
+                bestSeparatorIndex = index;
+                detectedSeparatorLength = sep.length + 2; // +spaces
+            }
+        } else {
+            // Handle start of string case (unlikely but possible)
+            if (lowerName.startsWith(`${sep} `)) {
+                bestSeparatorIndex = 0;
+                detectedSeparatorLength = sep.length + 1;
+            }
+        }
+    }
+
+    if (bestSeparatorIndex !== -1) {
+        // Brand is everything AFTER the separator
+        brand = name.substring(bestSeparatorIndex + detectedSeparatorLength).trim();
+        // Name is everything BEFORE the separator
+        name = name.substring(0, bestSeparatorIndex).trim();
+    } else {
+        // ADVANCED: If no separator, but the user specifically asked for "[Name] + [Brand] + [Qty]".
+        // We can try a heuristic: if name has > 1 words, the last word might be a brand? 
+        // BUT this is risky. "Roti Tawar" -> Brand "Tawar"? NO.
+        // "Susu Sereal" -> Brand "Sereal"? NO.
+        // Better to rely on separators for now for 100% accuracy, OR
+        // if the user said the format is [Item] [Brand] [Qty], we could TRY to take the last word as brand if it looks capitalized (not possible in voice usually).
+
+        // Let's stick to separators for safety, UNLESS the user explicitly requested "Detect Brand".
+        // The user's prompt: "kalo aku mau nambah value merek/brand di item bisa gak ?" -> "bisa gak detect brand voice input nya, pake format [Item Name] + [Brand] + [Quantity] + [Unit]"
+
+        // Since generic word splitting is ambiguous ("Kecap Manis Bango" -> Name: Kecap Manis, Brand: Bango),
+        // without a dictionary of brands OR items, it's guessing.
+        // Let's implement a heuristic: If the name is > 2 words, the last word is brand? Still risky.
+        // Let's stick to Separator-based for V1, or maybe "Last Word is Brand" if > 2 words? 
+        // "Kecap Bango" (2 words) -> Name: Kecap, Brand: Bango. OK
+        // "Roti Tawar" (2 words) -> Name: Roti, Brand: Tawar. BAD
+
+        // DECISION: Only use Separators for now to avoid bad UX.
+    }
+
     return {
         raw: text,
-        name: name || 'Item', // Fallback if name is empty
+        name: name || 'Item',
         qty,
-        unit
+        unit,
+        brand: brand || undefined
     };
 };

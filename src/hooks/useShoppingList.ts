@@ -115,7 +115,7 @@ export const useShoppingList = (householdId: string | null, listId: string | nul
         }
     };
 
-    const moveToHistory = async (id: string, finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string, listName?: string, storeName?: string, notes?: string) => {
+    const moveToHistory = async (id: string, finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string, listName?: string, storeName?: string, notes?: string, brand?: string) => {
         const item = items.find(i => i.id === id);
         if (!item || !householdId) return;
 
@@ -132,7 +132,8 @@ export const useShoppingList = (householdId: string | null, listId: string | nul
                     notes: notes,
                     price: finalPrice,
                     category: category,
-                    store_name: storeName
+                    store_name: storeName,
+                    brand: brand
                 };
                 console.log('Optimistic update:', updated);
                 return updated;
@@ -141,7 +142,7 @@ export const useShoppingList = (householdId: string | null, listId: string | nul
         }));
 
         try {
-            await localItemService.moveToHistory(item, finalPrice, totalSize, baseUnit, itemName, category, listName, storeName, notes);
+            await localItemService.moveToHistory(item, finalPrice, totalSize, baseUnit, itemName, category, listName, storeName, notes, brand);
 
         } catch (error) {
             console.error('Error moving to history:', error);

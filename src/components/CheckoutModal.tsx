@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonInput, IonIcon } from '@ionic/react';
 import { closeOutline, checkmarkCircleOutline, alertCircleOutline, pricetagOutline, cubeOutline, storefrontOutline, searchOutline } from 'ionicons/icons';
 import { localStoreService, localItemService } from '../services/localService';
-import type { ShoppingItem } from '../services/types';
+import type { ShoppingItem, TransactionHistory } from '../services/types';
 import { modalEnterAnimation, modalLeaveAnimation } from '../utils/animations';
 import { detectCategory } from '../utils/categoryHelper';
 
@@ -11,10 +11,14 @@ interface CheckoutModalProps {
     onClose: () => void;
     item: ShoppingItem | null;
     householdId: string | null;
-    onConfirm: (finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string, storeName?: string, notes?: string) => void;
+    onConfirm: (finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string, storeName?: string, notes?: string, brand?: string) => void;
+    // Edit Mode Props
+    isEditMode?: boolean;
+    historyItem?: TransactionHistory | null;
+    onUpdate?: (id: string, updates: Partial<TransactionHistory>) => void;
 }
 
-const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, householdId, onConfirm }) => {
+const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, householdId, onConfirm, isEditMode = false, historyItem, onUpdate }) => {
     const [price, setPrice] = useState<string>('');
     const [size, setSize] = useState<string>('');
     const [unit, setUnit] = useState<string>('');
@@ -24,6 +28,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, ho
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     const [notes, setNotes] = useState<string>('');
+    const [brand, setBrand] = useState<string>('');
 
     // Store State
     const [store, setStore] = useState<string>('');
@@ -71,6 +76,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, ho
             setUnit(item.unit);
             setItemName(item.item_name);
             setNotes(item.notes || '');
+            setBrand(item.brand || '');
 
             // Auto-detect category or use saved category
             const savedCategory = item.category;
@@ -88,8 +94,21 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, ho
             setLastPrice(null);
             setPriceComparison(null);
             fetchLastPrice(item.item_name, item.unit);
+            setPriceComparison(null);
+            fetchLastPrice(item.item_name, item.unit);
+        } else if (isEditMode && historyItem) {
+            // Populate from History Item
+            setPrice(historyItem.final_price.toString());
+            setSize(historyItem.total_size.toString());
+            setUnit(historyItem.base_unit);
+            setItemName(historyItem.item_name);
+            setNotes(historyItem.notes || '');
+            setBrand(historyItem.brand || '');
+            setCategory(historyItem.category || detectCategory(historyItem.item_name) || 'Lainnya');
+            setStore(historyItem.store_name || '');
+            setStoreSearchTerm(historyItem.store_name || '');
         }
-    }, [item]);
+    }, [item, isEditMode, historyItem]);
 
     const fetchLastPrice = async (itemName: string, itemUnit: string) => {
         // Simple logic: Find last purchase with same unit (MVP)
@@ -119,7 +138,21 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, ho
             if (finalStore) {
                 await localStoreService.addStore(householdId || 'local', finalStore);
             }
-            onConfirm(parseFloat(price), parseFloat(size), unit, itemName, category || undefined, finalStore || undefined, notes || undefined);
+
+            if (isEditMode && historyItem && onUpdate) {
+                onUpdate(historyItem.id, {
+                    final_price: parseFloat(price),
+                    total_size: parseFloat(size),
+                    base_unit: unit,
+                    item_name: itemName,
+                    category: category || undefined,
+                    store_name: finalStore || undefined,
+                    notes: notes || undefined,
+                    brand: brand || undefined
+                });
+            } else {
+                onConfirm(parseFloat(price), parseFloat(size), unit, itemName, category || undefined, finalStore || undefined, notes || undefined, brand || undefined);
+            }
             onClose();
         }
     };
@@ -135,7 +168,9 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, ho
             <div className="flex flex-col h-full bg-white">
                 <IonHeader className="ion-no-border">
                     <IonToolbar style={{ '--min-height': '44px' }}>
-                        <IonTitle className="text-base ion-text-center">Confirm Purchase</IonTitle>
+                        <IonTitle className="text-base ion-text-center">
+                            {isEditMode ? 'Edit Transaction' : 'Confirm Purchase'}
+                        </IonTitle>
                         <IonButtons slot="end">
                             <IonButton onClick={onClose} className="text-gray-500">
                                 <IonIcon icon={closeOutline} />
@@ -156,6 +191,17 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, ho
                                     placeholder="Item Name"
                                 />
                             </div>
+
+                            {/* Brand Input */}
+                            <div className="bg-gray-50 rounded-xl px-3 py-1 mb-1 focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/20 transition-all w-3/4 mx-auto">
+                                <IonInput
+                                    value={brand}
+                                    onIonChange={e => setBrand(e.detail.value!)}
+                                    className="font-medium text-xs text-center text-text-main"
+                                    placeholder="Brand (Optional)"
+                                />
+                            </div>
+
                             <p className="text-text-muted text-[10px]">Enter details to save to history.</p>
                         </div>
 
@@ -377,7 +423,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, item, ho
                             }`}
                         shape="round"
                     >
-                        Confirm Purchase
+                        {isEditMode ? 'Update Transaction' : 'Confirm Purchase'}
                     </IonButton>
 
                 </div>

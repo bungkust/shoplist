@@ -19,6 +19,7 @@ export interface ShoppingItem {
     price?: number;
     category?: string;
     store_name?: string;
+    brand?: string;
 }
 
 export interface TransactionHistory {
@@ -31,6 +32,7 @@ export interface TransactionHistory {
     category?: string;
     list_name?: string;
     store_name?: string;
+    brand?: string;
     purchased_at: string;
     notes?: string;
 }
@@ -47,7 +49,8 @@ export interface ItemService {
     addItem(item: Omit<ShoppingItem, 'id' | 'created_at' | 'is_purchased'>): Promise<ShoppingItem | null>;
     toggleItem(id: string, isPurchased: boolean): Promise<void>;
     deleteItem(id: string): Promise<void>;
-    moveToHistory(item: ShoppingItem, finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string, listName?: string, storeName?: string, notes?: string): Promise<void>;
+    moveToHistory(item: ShoppingItem, finalPrice: number, totalSize: number, baseUnit: string, itemName: string, category?: string, listName?: string, storeName?: string, notes?: string, brand?: string): Promise<void>;
+    updateHistory(id: string, updates: Partial<TransactionHistory>): Promise<void>;
     getHistory(householdId: string, page?: number, pageSize?: number, searchTerm?: string, categories?: string[]): Promise<TransactionHistory[]>;
     getHistoryCategories(householdId: string): Promise<string[]>;
 }

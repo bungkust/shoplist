@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonButton, IonIcon, IonToast, useIonViewDidEnter, IonRefresher, IonRefresherContent } from '@ionic/react';
 import type { RefresherEventDetail } from '@ionic/react';
-import { refreshOutline, timeOutline, searchOutline, closeCircle, filterOutline } from 'ionicons/icons';
+import { refreshOutline, timeOutline, searchOutline, closeCircle, filterOutline, createOutline } from 'ionicons/icons';
 import CategoryFilterModal from '../components/CategoryFilterModal';
 import ListSelectionModal from '../components/ListSelectionModal';
 import { localItemService, localListService } from '../services/localService';
 import type { TransactionHistory, ListMaster } from '../services/types';
 import { useHistory } from 'react-router-dom';
+
+import CheckoutModal from '../components/CheckoutModal';
 
 const History: React.FC = () => {
   const history = useHistory();
@@ -26,7 +28,8 @@ const History: React.FC = () => {
   const [categories, setCategories] = useState<string[]>([]);
 
   // Detail Modal
-  // const [selectedHistoryItem, setSelectedHistoryItem] = useState<{ name: string, history: TransactionHistory[] } | null>(null);
+  const [selectedHistoryItem, setSelectedHistoryItem] = useState<TransactionHistory | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Rebuy Logic States
   const [showListSelection, setShowListSelection] = useState(false);
@@ -128,6 +131,26 @@ const History: React.FC = () => {
       list_id: listId
     });
     setToastMessage('Item added back to list!');
+    setShowToast(true);
+    setShowToast(true);
+  };
+
+  const handleEditClick = (e: React.MouseEvent, item: TransactionHistory) => {
+    e.stopPropagation();
+    setSelectedHistoryItem(item);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateHistory = async (id: string, updates: Partial<TransactionHistory>) => {
+    if (!householdId) return;
+
+    await localItemService.updateHistory(id, updates);
+
+    // Update local state immediately
+    setHistory(prev => prev.map(h => h.id === id ? { ...h, ...updates } : h));
+
+    setIsEditModalOpen(false);
+    setToastMessage('Transaction updated!');
     setShowToast(true);
   };
 
@@ -247,14 +270,24 @@ const History: React.FC = () => {
                       </p>
                     </div>
                   </div>
-                  <IonButton
-                    fill="clear"
-                    size="small"
-                    className="h-10 w-10 rounded-full hover:bg-blue-50 text-blue-600 transition-colors"
-                    onClick={(e) => handleRestockClick(e, item)}
-                  >
-                    <IonIcon slot="icon-only" icon={refreshOutline} />
-                  </IonButton>
+                  <div className="flex gap-1">
+                    <IonButton
+                      fill="clear"
+                      size="small"
+                      className="h-10 w-10 rounded-full hover:bg-orange-50 text-orange-400 transition-colors"
+                      onClick={(e) => handleEditClick(e, item)}
+                    >
+                      <IonIcon slot="icon-only" icon={createOutline} />
+                    </IonButton>
+                    <IonButton
+                      fill="clear"
+                      size="small"
+                      className="h-10 w-10 rounded-full hover:bg-blue-50 text-blue-600 transition-colors"
+                      onClick={(e) => handleRestockClick(e, item)}
+                    >
+                      <IonIcon slot="icon-only" icon={refreshOutline} />
+                    </IonButton>
+                  </div>
                 </div>
               ))}
 
@@ -282,6 +315,17 @@ const History: React.FC = () => {
           duration={2000}
           position="top"
           color="success"
+        />
+
+        <CheckoutModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          item={null} // Not used in edit mode
+          householdId={householdId}
+          onConfirm={() => { }} // Not used in edit mode
+          isEditMode={true}
+          historyItem={selectedHistoryItem}
+          onUpdate={handleUpdateHistory}
         />
 
         <ListSelectionModal
